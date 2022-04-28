@@ -1,0 +1,46 @@
+name: Test and Build on on Develop
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+  
+jobs:
+  build:
+
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Lint Core package
+        run: yarn workspace @seaccentral/core lint
+
+      - name: Lint Auth service
+        run: yarn workspace @seaccentral/auth lint
+
+      - name: Lint Central service
+        run: yarn workspace @seaccentral/central lint
+
+      - name: Lint Payment service
+        run: yarn workspace @seaccentral/payment lint
+
+      - name: Lint Web service
+        run: yarn workspace @seaccentral/web lint:fix    
