@@ -1,0 +1,370 @@
+name: Test all services
+
+on:
+  push:
+    branches:
+      - hotfix/github-actions
+  pull_request:
+    branches:
+      - develop
+      - staging
+      - main
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+  POSTGRES_USERNAME: seac_central
+  POSTGRES_PASSWORD: seac_central
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  lint-services:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Lint Core package
+        run: yarn workspace @seaccentral/core lint
+
+      - name: Lint Auth service
+        run: yarn workspace @seaccentral/auth lint
+
+      - name: Lint Central service
+        run: yarn workspace @seaccentral/central lint
+
+      - name: Lint Payment service
+        run: yarn workspace @seaccentral/payment lint
+
+      - name: Lint Web service
+        run: yarn workspace @seaccentral/web lint:fix
+
+  test-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Build Central package
+        run: yarn build:central
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test migrations
+        uses: ./.github/actions/test-migrations
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}
+
+  test-core:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Core service
+        uses: ./.github/actions/test-core
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}
+
+  test-auth:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Auth service
+        uses: ./.github/actions/test-auth
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}
+
+  test-central:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Central service
+        uses: ./.github/actions/test-central
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}
+
+  test-payment:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Payment service
+        uses: ./.github/actions/test-payment
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}
+
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Test Web service
+        uses: ./.github/actions/test-web
+
+  test-notification:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Notification service
+        uses: ./.github/actions/test-notification
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}

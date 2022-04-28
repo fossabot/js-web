@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DashboardController (e2e) as an admin, I should be able to export a csv file from payment data 1`] = `
+"newUser,renewUser,expiredUser,unsuccessfulPayment,packageType,memberType,revenue
+0,0,0,0,,,0"
+`;

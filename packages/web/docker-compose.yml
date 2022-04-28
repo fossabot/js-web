@@ -1,0 +1,10 @@
+version: '3'
+services:
+  seacweb:
+    build:
+      context: ../../
+      dockerfile: packages/web/Dockerfile
+  nginx:
+    build: ./nginx
+    ports:
+      - 8080:80

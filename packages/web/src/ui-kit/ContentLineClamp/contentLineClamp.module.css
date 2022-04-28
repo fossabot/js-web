@@ -1,0 +1,23 @@
+.rte {
+  @apply text-caption text-gray-650;
+}
+
+.rte strong {
+  @apply font-bold;
+}
+
+.rte ul {
+  @apply list-disc pl-4;
+}
+
+.rte ol {
+  @apply list-decimal pl-4;
+}
+
+.rte li {
+  @apply my-4 list-outside;
+}
+
+.rte a {
+  @apply text-brand-primary underline;
+}

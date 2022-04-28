@@ -1,0 +1,8 @@
+{
+  "Template": {
+    "TemplateName": "AccountActivationTemplate",
+    "SubjectPart": "Activate your account",
+    "HtmlPart": "<table style=\"background-color: #C4C4C4;font-family: Poppins, sans-serif, 'Open Sans'; padding: 20px;text-align: center\"><tr><td><img src=\"{{imgUrl}}\"></td></tr><tr><td style=\"padding-bottom: 6px; font-size: 13px; line-height: 19px; font-weight: bold;\">Welcome to YourNextU!</td></tr><tr><td style=\"padding-bottom: 20px; font-size: 10px; line-height: 15px;\">Your email is <span style=\"font-weight: bold;\">{{email}}</span></td></tr><tr><td style=\"padding-bottom: 6px; font-size: 10px; line-height: 15px;\">We glad you could join our community of learning. This is a place full of opportunities and useful knowledge.</td></tr><tr><td style=\"padding-bottom: 20px; font-size: 10px; line-height: 15px;\">To start your learning journey, please clck on the button below to activate your account.</td></tr><tr><td><a href=\"{{accountActivationUrl}}\" target=\"_blank\" style=\"padding: 4px 18px; color: black; font-weight: bold; text-decoration: none; border-radius: 3px; background: white; font-size: 13px;line-height: 19px;\">Activate</a></td></tr></table>",
+    "TextPart": ""
+  }
+}

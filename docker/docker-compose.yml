@@ -1,0 +1,95 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:13
+    restart: always
+    ports:
+      - '5432:5432'
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d
+    environment:
+      TZ: UTC
+      PGTZ: UTC
+    networks:
+      - postgres
+
+  pgadmin:
+    links:
+      - postgres:postgres
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - '8085:80'
+    volumes:
+      - pgdata:/root/.pgadmin
+    env_file:
+      - .env
+    networks:
+      - postgres
+
+  # Elasticsearch nodes
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.0
+    container_name: es01
+    restart: always
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  # Redis
+  cache:
+    image: redis:6.2.6-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass "${REDIS_PASS}"
+    volumes:
+      - cache:/data
+    networks:
+      - redis
+
+  socketio-admin:
+    build:
+      context: ../packages/notification
+      dockerfile: Dockerfile.socket-admin
+    ports:
+      - '6601:8080'
+    networks:
+      - admin-socket
+
+networks:
+  postgres:
+    driver: bridge
+  elastic:
+    driver: bridge
+  redis:
+    driver: bridge
+  admin-socket:
+    driver: bridge
+volumes:
+  pgdata:
+  data01:
+    driver: local
+  cache:

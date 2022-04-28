@@ -1,0 +1,160 @@
+name: Deploy Central Service to Develop
+
+on:
+  push:
+    paths:
+      - 'packages/central/**'
+      - 'packages/core/**'
+      - 'tsconfig.json'
+      - 'tsconfig.node.json'
+      - 'package.json'
+      - '.github/workflows/develop-deploy-central.yml'
+    branches:
+      - develop
+      - hotfix/github-actions
+  pull_request:
+    types:
+      - labeled
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+  POSTGRES_USERNAME: seac_central
+  POSTGRES_PASSWORD: seac_central
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: ${{ (github.event.action != 'labeled' || github.event.label.name == 'trigger-deploy-central-to-dev') }}
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Central Service
+        env:
+          IS_PRODUCTION: false
+          NODE_ENV: test
+          PORT: 4400
+          DB_HOST: 0.0.0.0
+          DB_NAME: seac_development
+          DB_NAME_TEST: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: seac_central
+          DB_PASSWORD: seac_central
+          DB_PORT: ${{ env.DATABASE_PORT }}
+          JWT_SECRET: secret
+          JWT_EXPIRATION_TIME_IN_SECONDS: 80
+          HTTP_AUTH_HEADER: auth_token
+          CLIENT_BASE_URL: http://localhost:3000
+          AUTH_BASE_URL: http://localhost:3300/api/auth
+          ENABLE_AWS_SES: false
+          AWS_REGION: ap-southeast-1
+          AWS_CREDENTIAL_PROFILE: default
+          AWS_SES_SENDER_ADDRESS: no-reply@seacasia.com
+          ENABLE_AWS_S3: true
+          S3_MAIN_BUCKET_NAME: seac-central-apps-development-bucket
+          CRM_RETAIL_PATH: https://prod-24.southeastasia.logic.azure.com:443/workflows/b92a50f8c0f64d90bfe20fef8c9fde8d/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          CRM_CORPORATE_PATH: https://prod-13.southeastasia.logic.azure.com:443/workflows/098b163ef705403ebe83431dd80eb9f5/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          CRM_UPDATE_MEMBER_PATH: https://prod-01.southeastasia.logic.azure.com:443/workflows/c06dffefce0f4549b7594666bc39842a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          SIGNATURE_RETAIL: IenSjANqZF9KmAeaXMnZpl2-SSanT11UJQyyxFqk61s
+          SIGNATURE_CORPORATE: JUl5kUx4B8pmPWTM8GKemXpDXj7BvIE8IweaLjtlRro
+          SIGNATURE_UPDATE_MEMBER: ceYLLNUYY3lrCtTTRJh-RcQhwK0kpplzGZ2hXO854gU
+          INSTANCY_C23_BASE_URL: 'https://stagingc23-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_C23_ASTR_KEY: '56E9F505-05AF-45F2-B063-A7823395E19B'
+          INSTANCY_ALL_ACCESS_PACKAGE_BASE_URL: 'https://staging-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_ALL_ACCESS_PACKAGE_ASTR_KEY: '77EE2AF5-5567-46EB-929F-A75E769CE502'
+          INSTANCY_ONLINE_PACKAGE_BASE_URL: 'https://stagingonline-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_ONLINE_PACKAGE_ASTR_KEY: 'C9EC9572-35EC-45AB-8673-0E4D0D624FEE'
+          INSTANCY_VIRTUAL_PACKAGE_BASE_URL: 'https://stagingvirtual-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_VIRTUAL_PACKAGE_ASTR_KEY: '3631BAD0-626C-4379-9976-06AE19F12492'
+          X_CRM_TOKEN: DGGTs2N4zEyvhN6wlsLZ
+          X_SYNC_TOKEN: STNLzzPyjN96w8UBvnfR2sjX
+          X_AR_TOKEN: rA23PnQqsSR
+          JWPLAYER_SITE_ID: XUeNt1bG
+          JWPLAYER_TOKEN: NtzRh2wY2pvRPtFBUCBqE2InUjBOblNXMUNSbFYzTVhGMGEzbFZNbXB1V0doT01sRnMn
+          JWPLAYER_V1_SECRET: 3Wy06JGH3OUU7uVPr519rjLE
+          JWPLAYER_PLAYER_ID: pIYcinHU
+          JWPLAYER_WEBHOOK_SECRET: iiKk3jEbyEZXnqgv-9smomInVDJSNVpXd3piV2Q2YXpKTVRESlBiMWgzTWpWTFVrOVIn
+          ELASTICSEARCH_HOST: http://localhost:9200
+          ELASTICSEARCH_USERNAME: elastic
+          ELASTICSEARCH_PASSWORD: admin
+          SCORM_JWT_SECRET: scorm
+          SCORM_JWT_EXPIRATION_TIME_IN_SECONDS: 60
+          ASSESSMENT_CENTER_URL: 'https://dev-assessment.seasiacenter.com'
+          ASSESSMENT_CENTER_TOKEN: '6Dsa4KF45bFykXDV'
+          REDIS_HOST: localhost
+          REDIS_PORT: 12345
+        run: |
+          yarn workspace @seaccentral/central test
+          yarn workspace @seaccentral/central test:e2e
+
+  deploy:
+    if: ${{ (github.event.action != 'labeled' || github.event.label.name == 'trigger-deploy-central-to-dev') }}
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: develop-central
+      url: https://dev-central.seasiacenter.com/api/central/v1/admin/healthcheck
+    steps:
+      - name: Remove the triggering label if present
+        uses: actions-ecosystem/action-remove-labels@v1.3.0
+        if: ${{ github.event.action == 'labeled' }}
+        with:
+          labels: trigger-deploy-central-to-dev
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Deploy Central service
+        uses: ./.github/actions/deploy-central
+        with:
+          AWS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          ECS_CLUSTER: seac-central-apps-cluster-development
+          CORE_ECS_SERVICES: seac-central-apps-core-development
+          CORE_ECS_CONTAINER: seac-central-apps-core-container-development
+          CORE_ECR_REPOSITORY: seac-central-apps-core-development
+          CENTRAL_ECS_SERVICES: seac-central-apps-central-api-service-development
+          CENTRAL_ECS_CONTAINER: seac-central-apps-central-api-container-development
+          CENTRAL_ECR_REPOSITORY: seac-central-apps-central-api-development
+          SUBNET_PRIMARY: subnet-074b3a367fed91b18
+          SUBNET_SECONDARY: subnet-0cbb56a258dcc7b26
+          SG_TASK: sg-00447499792bce7b6
+          SG_DB_ACCESS: sg-0e6b14adb5779e180

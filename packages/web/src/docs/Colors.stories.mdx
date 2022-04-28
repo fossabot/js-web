@@ -1,0 +1,63 @@
+import { Meta, ColorPalette, ColorItem } from '@storybook/addon-docs/blocks';
+
+import { theme } from '../../tailwind.config';
+
+export const colors = theme.colors;
+
+<Meta title="Docs/Colors" />
+
+# Colors
+
+<ColorPalette>
+
+## Brand
+
+  <ColorItem
+    title="Brand Primary"
+    subtitle="theme.colors.brand.primary"
+    colors={[colors.brand.primary]}
+  />
+  <ColorItem
+    title="Brand Secondary"
+    subtitle="theme.colors.brand.secondary"
+    colors={[colors.brand.secondary]}
+  />
+  <ColorItem
+    title="Brand Tertiary"
+    subtitle="theme.colors.brand.tertiary"
+    colors={[colors.brand.tertiary]}
+  />
+
+## Maroon
+
+  <ColorItem
+    title="Maroon 100"
+    subtitle="theme.colors.maroon.100"
+    colors={[colors.maroon[100]]}
+  />
+  <ColorItem
+    title="Maroon 200"
+    subtitle="theme.colors.maroon.200"
+    colors={[colors.maroon[200]]}
+  />
+  <ColorItem
+    title="Maroon 300"
+    subtitle="theme.colors.maroon.300"
+    colors={[colors.maroon[300]]}
+  />
+    <ColorItem
+    title="Maroon 400"
+    subtitle="theme.colors.maroon.400"
+    colors={[colors.maroon[400]]}
+  />
+  <ColorItem
+    title="Maroon 500"
+    subtitle="theme.colors.maroon.500"
+    colors={[colors.maroon[500]]}
+  />
+  <ColorItem
+    title="Maroon 600"
+    subtitle="theme.colors.maroon.600"
+    colors={[colors.maroon[600]]}
+  />
+</ColorPalette>

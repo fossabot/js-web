@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  db:
+    container_name: "${CONTAINER_NAME}"
+    image: postgres:13
+    restart: always
+    ports:
+      - "${DATABASE_PORT}:5432"
+    environment:
+      TZ: UTC
+      PGTZ: UTC
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      COMPOSE_PROJECT_NAME: "${COMPOSE_PROJECT_NAME}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

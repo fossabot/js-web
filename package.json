@@ -1,0 +1,53 @@
+{
+  "private": true,
+  "name": "seaccentral",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/babel**",
+      "**/eslint**",
+      "**/jest"
+    ]
+  },
+  "scripts": {
+    "start:all": "concurrently 'yarn start:core' 'yarn start:web' 'yarn start:auth' 'yarn start:central' 'yarn start:payment' 'yarn start:notification'",
+    "start:web": "yarn workspace @seaccentral/web dev",
+    "start:auth": "yarn workspace @seaccentral/auth start:dev",
+    "start:central": "yarn workspace @seaccentral/central start:dev",
+    "start:payment": "yarn workspace @seaccentral/payment start:dev",
+    "start:core": "yarn workspace @seaccentral/core ts:watch",
+    "start:cli": "yarn workspace @seaccentral/cli start",
+    "start:notification": "yarn workspace @seaccentral/notification start:dev",
+    "build:auth": "yarn workspace @seaccentral/auth build",
+    "build:web": "yarn workspace @seaccentral/web build",
+    "build:central": "yarn workspace @seaccentral/central build",
+    "build:payment": "yarn workspace @seaccentral/payment build",
+    "build:core": "yarn workspace @seaccentral/core ts:build",
+    "build:cli": "yarn workspace @seaccentral/cli build",
+    "build:notification": "yarn workspace @seaccentral/notification build",
+    "migrate": "yarn workspace @seaccentral/core db:migration:run",
+    "seed": "yarn workspace @seaccentral/central execute run-seeds",
+    "seed:dev": "yarn workspace @seaccentral/central execute run-seeds-dev",
+    "clean:build": "rimraf 'packages/*/dist' 'packages/*/tsconfig.tsbuildinfo' 'packages/*/.eslintcache' && yarn build:core && yarn build:central && yarn build:auth && yarn build:payment",
+    "prepare": "husky install",
+    "jwplayer:webhook": "yarn workspace @seaccentral/central execute create-jwplayer-webhook",
+    "central": "yarn workspace @seaccentral/central",
+    "core": "yarn workspace @seaccentral/core",
+    "auth": "yarn workspace @seaccentral/auth",
+    "payment": "yarn workspace @seaccentral/payment",
+    "cli": "yarn workspace @seaccentral/cli",
+    "web": "yarn workspace @seaccentral/web",
+    "notification": "yarn workspace @seaccentral/notification"
+  },
+  "engines": {
+    "node": ">= 14.16.0"
+  },
+  "dependencies": {
+    "concurrently": "^6.0.0"
+  },
+  "devDependencies": {
+    "husky": "^5.1.3"
+  }
+}

@@ -1,0 +1,229 @@
+name: Deploy CLI Service to Develop
+
+on:
+  push:
+    paths:
+      - ".github/workflows/develop-deploy-cli.yml"
+    branches:
+      - develop
+      - fix-test-cli
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js (14)
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+      - run: npm install -g yarn
+
+      - name: Install dependencies
+        run: |
+          yarn
+          yarn build:core
+
+      - name: Lint CLI Service
+        run: yarn workspace @seaccentral/cli lint
+
+      - name: Run migrations
+        env:
+          NODE_ENV: test
+          DB_HOST: 0.0.0.0
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME_TEST: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: seac_central
+          DB_PASSWORD: seac_central
+          DB_PORT: ${{ env.DATABASE_PORT }}
+        run: |
+          yarn workspace @seaccentral/core db:migration:run
+
+      - name: Test CLI Service
+        env:
+          NODE_ENV: test
+          DB_HOST: 0.0.0.0
+          DB_NAME: seac_development
+          DB_NAME_TEST: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: seac_central
+          DB_PASSWORD: seac_central
+        run: |
+          yarn workspace @seaccentral/cli test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Setup node.js (14)
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build core
+        id: build-core
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: seac-central-apps-core-development
+          PROD_IMAGE_TAG: "${{ github.sha }}-cli"
+        run: |
+          echo "Dockerizing Core Package..."
+          docker buildx build --platform linux/amd64 -f "packages/core/Dockerfile" -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:cache-prod .
+
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:cache-prod $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          echo "::set-output name=core-image::$ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG"
+
+      - name: Get core task definitions
+        id: get-core-task-definitions
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition seac-central-apps-core-development \
+            --query taskDefinition > core-task-definition.json
+
+      - name: Fill in the new image ID in the Core task definition
+        id: fill-core-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: core-task-definition.json
+          container-name: seac-central-apps-core-container-development
+          image: ${{ steps.build-core.outputs.core-image }}
+
+      - name: Deploy Amazon ECS task definition for core
+        id: deploy-core-td
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.fill-core-task-definition.outputs.task-definition }}
+          cluster: seac-central-apps-cluster-development
+          wait-for-service-stability: true
+
+      - name: Run migrations
+        id: migration
+        env:
+          ECS_CLUSTER: seac-central-apps-cluster-development
+          ECS_TASK_DEFINITION: ${{ steps.deploy-core-td.outputs.task-definition-arn }}
+          SUBNET_PRIMARY: subnet-074b3a367fed91b18
+          SUBNET_SECONDARY: subnet-0cbb56a258dcc7b26
+          SG_TASK: sg-00447499792bce7b6
+          SG_DB_ACCESS: sg-0e6b14adb5779e180
+        run: |
+          # Run custom scripts
+          echo "=== RUN CUSTOM SCRIPTS ===="
+          RUN_RESULT=$(aws ecs run-task --started-by "${{ github.sha }}-cli" \
+            --cluster ${ECS_CLUSTER} \
+            --task-definition ${ECS_TASK_DEFINITION} \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_PRIMARY}, ${SUBNET_SECONDARY}],securityGroups=[${SG_TASK}, ${SG_DB_ACCESS}],assignPublicIp=ENABLED"})
+          echo $RUN_RESULT
+          echo ""
+          if [[ $(echo $RUN_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          ARN=$(echo $RUN_RESULT|jq -r -c '.tasks[].taskArn')
+          # Wait script end
+          aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks "$ARN"
+          FINAL_RESULT=$(aws ecs describe-tasks --cluster ${ECS_CLUSTER} --tasks "$ARN")
+          echo "=== SCRIPT RESULT ===="
+          echo $FINAL_RESULT
+          if [[ $(echo $FINAL_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          EXIT_CODE=$(echo $FINAL_RESULT | jq ".tasks[0].containers[0].exitCode|tonumber" -r)
+          echo "exit $EXIT_CODE"
+          exit $EXIT_CODE
+
+      - name: Build CLI
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: seac-central-apps-cli-development
+          PROD_IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Dockerizing CLI Package..."
+          docker buildx build --platform linux/amd64 -f "packages/cli/Dockerfile" -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:cache-prod .
+
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:cache-prod $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          echo "::set-output name=cli-app-image::$ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG"
+
+      - name: Get task definitions
+        id: get-task-definitions
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition seac-central-apps-cli-development \
+            --query taskDefinition > cli-task-definition.json
+
+      - name: Fill in the new image ID in the CLI task definition
+        id: fill-cli-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: cli-task-definition.json
+          container-name: seac-central-apps-cli-container-development
+          image: ${{ steps.build.outputs.cli-app-image }}
+
+      - name: Deploy Amazon ECS task definition
+        id: deploy-cli-td
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.fill-cli-task-definition.outputs.task-definition }}
+          cluster: seac-central-apps-cluster-development
+          wait-for-service-stability: true
+
+      - name: Run Custom Script
+        id: user-migration
+        env:
+          ECS_CLUSTER: seac-central-apps-cluster-development
+          ECS_TASK_DEFINITION: ${{ steps.deploy-cli-td.outputs.task-definition-arn }}
+          SUBNET_PRIMARY: subnet-074b3a367fed91b18
+          SUBNET_SECONDARY: subnet-0cbb56a258dcc7b26
+          SG_TASK: sg-00447499792bce7b6
+          SG_DB_ACCESS: sg-0e6b14adb5779e180
+        run: |
+          # Run custom scripts
+          echo "=== RUN CUSTOM SCRIPTS ===="
+          RUN_RESULT=$(aws ecs run-task --started-by "${{ github.sha }}" \
+            --cluster ${ECS_CLUSTER} \
+            --task-definition ${ECS_TASK_DEFINITION} \
+            --overrides '{"containerOverrides":[{"name": "seac-central-apps-cli-container-development", "command": ["migrate-user"]}]}' \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_PRIMARY}, ${SUBNET_SECONDARY}],securityGroups=[${SG_TASK}, ${SG_DB_ACCESS}],assignPublicIp=ENABLED"})
+          echo $RUN_RESULT
+          echo ""
+          if [[ $(echo $RUN_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          ARN=$(echo $RUN_RESULT|jq -r -c '.tasks[].taskArn')
+          # Wait script end
+          aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks "$ARN"
+          FINAL_RESULT=$(aws ecs describe-tasks --cluster ${ECS_CLUSTER} --tasks "$ARN")
+          echo "=== SCRIPT RESULT ===="
+          echo $FINAL_RESULT
+          if [[ $(echo $FINAL_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          EXIT_CODE=$(echo $FINAL_RESULT | jq ".tasks[0].containers[0].exitCode|tonumber" -r)
+          echo "exit $EXIT_CODE"
+          exit $EXIT_CODE

@@ -1,0 +1,98 @@
+name: Test Web services
+description: Test Web services
+
+inputs:
+  NODE_ENV:
+    description: Node Environment
+    required: false
+    default: test
+  AUTH_API_BASE_URL:
+    description: Auth Service based URL
+    required: false
+    default: http://localhost:3300/api/auth
+  CENTRAL_API_BASE_URL:
+    description: Central Service based URL
+    required: false
+    default: http://localhost:4400/api/central
+  PAYMENT_API_BASE_URL:
+    description: Payment Service based URL
+    required: false
+    default: http://localhost:5500/api/payment
+  NOTIFICATION_API_BASE_URL:
+    description: Notification Service based URL
+    required: false
+    default: http://localhost:6600/api/notification
+  NEXT_PUBLIC_NOTIFICATION_URL:
+    description: Notification Service URL
+    required: false
+    default: http://localhost:6600
+  NEXT_PUBLIC_CORPORATE_WEB_BASE_URL:
+    description: CORPORATE_WEB_BASE_URL
+    required: false
+    default: https://dev-register.seasiacenter.com
+  NEXT_PUBLIC_CDN_BASE_URL:
+    description: Next CDN URL
+    required: false
+    default: https://dev-central-cdn.seasiacenter.com/
+  NEXT_PUBLIC_HIDE_V2_FEATURE:
+    description: Flag for hiding V2 feature
+    required: false
+    default: 'false'
+  SENTRY_ENVIRONMENT_NAME:
+    description: Sentry Environment Name
+    required: false
+    default: local
+  SENTRY_DSN:
+    description: Sentry DSN
+    required: false
+    default: ''
+  NEXT_PUBLIC_RECAPTCHA_SITE_KEY:
+    description: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Test Web Service
+      shell: bash
+      env:
+        NODE_ENV: ${{ inputs.NODE_ENV }}
+        AUTH_API_BASE_URL: ${{ inputs.AUTH_API_BASE_URL }}
+        NEXT_PUBLIC_AUTH_API_BASE_URL: ${{ inputs.AUTH_API_BASE_URL }}
+        CENTRAL_API_BASE_URL: ${{ inputs.CENTRAL_API_BASE_URL }}
+        NEXT_PUBLIC_CENTRAL_API_BASE_URL: ${{ inputs.CENTRAL_API_BASE_URL }}
+        PAYMENT_API_BASE_URL: ${{ inputs.PAYMENT_API_BASE_URL }}
+        NEXT_PUBLIC_PAYMENT_API_BASE_URL: ${{ inputs.PAYMENT_API_BASE_URL }}
+        NOTIFICATION_API_BASE_URL: ${{ inputs.NOTIFICATION_API_BASE_URL }}
+        NEXT_PUBLIC_NOTIFICATION_API_BASE_URL: ${{ inputs.NOTIFICATION_API_BASE_URL }}
+        NEXT_PUBLIC_CORPORATE_WEB_BASE_URL: ${{ inputs.NEXT_PUBLIC_CORPORATE_WEB_BASE_URL }}
+        NEXT_PUBLIC_CDN_BASE_URL: ${{ inputs.NEXT_PUBLIC_CDN_BASE_URL }}
+        NEXT_PUBLIC_HIDE_V2_FEATURE: ${{ inputs.NEXT_PUBLIC_HIDE_V2_FEATURE }}
+        SENTRY_ENVIRONMENT_NAME: ${{ inputs.SENTRY_ENVIRONMENT_NAME }}
+        SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
+        NEXT_PUBLIC_SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ inputs.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+      run: |
+        yarn workspace @seaccentral/web test
+
+    - name: Verify build for Web Service
+      shell: bash
+      env:
+        AUTH_API_BASE_URL: ${{ inputs.AUTH_API_BASE_URL }}
+        NEXT_PUBLIC_AUTH_API_BASE_URL: ${{ inputs.AUTH_API_BASE_URL }}
+        CENTRAL_API_BASE_URL: ${{ inputs.CENTRAL_API_BASE_URL }}
+        NEXT_PUBLIC_CENTRAL_API_BASE_URL: ${{ inputs.CENTRAL_API_BASE_URL }}
+        PAYMENT_API_BASE_URL: ${{ inputs.PAYMENT_API_BASE_URL }}
+        NEXT_PUBLIC_PAYMENT_API_BASE_URL: ${{ inputs.PAYMENT_API_BASE_URL }}
+        NOTIFICATION_API_BASE_URL: ${{ inputs.NOTIFICATION_API_BASE_URL }}
+        NEXT_PUBLIC_NOTIFICATION_API_BASE_URL: ${{ inputs.NOTIFICATION_API_BASE_URL }}
+        NEXT_PUBLIC_CORPORATE_WEB_BASE_URL: ${{ inputs.NEXT_PUBLIC_CORPORATE_WEB_BASE_URL }}
+        NEXT_PUBLIC_CDN_BASE_URL: ${{ inputs.NEXT_PUBLIC_CDN_BASE_URL }}
+        NEXT_PUBLIC_HIDE_V2_FEATURE: ${{ inputs.NEXT_PUBLIC_HIDE_V2_FEATURE }}
+        SENTRY_ENVIRONMENT_NAME: ${{ inputs.SENTRY_ENVIRONMENT_NAME }}
+        SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
+        NEXT_PUBLIC_SENTRY_DSN: ${{ inputs.SENTRY_DSN }}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ inputs.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+      run: |
+        yarn workspace @seaccentral/web tsc:check

@@ -1,0 +1,83 @@
+name: Test Central serivce
+description: Test Central service
+
+inputs:
+  DB_HOST:
+    description: Database Host
+    required: false
+    default: 0.0.0.0
+  DB_NAME:
+    description: Database Name
+    required: true
+  DB_USERNAME:
+    description: Database Username
+    required: true
+  DB_PASSWORD:
+    description: Database Password
+    required: true
+  DB_PORT:
+    description: Database Port
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Test Central Service
+      shell: bash
+      env:
+        IS_PRODUCTION: 'false'
+        NODE_ENV: test
+        PORT: '4400'
+        DB_HOST: ${{ inputs.DB_HOST }}
+        DB_NAME: ${{ inputs.DB_NAME }}
+        DB_NAME_TEST: ${{ inputs.DB_NAME }}
+        DB_USERNAME: ${{ inputs.DB_USERNAME }}
+        DB_PASSWORD: ${{ inputs.DB_PASSWORD }}
+        DB_PORT: ${{ inputs.DB_PORT }}
+        JWT_SECRET: secret
+        JWT_EXPIRATION_TIME_IN_SECONDS: '30'
+        HTTP_AUTH_HEADER: auth_token
+        CLIENT_BASE_URL: http://localhost:3000
+        AUTH_BASE_URL: http://localhost:3300/api/auth
+        ENABLE_AWS_SES: 'false'
+        AWS_REGION: ap-southeast-1
+        AWS_CREDENTIAL_PROFILE: default
+        AWS_SES_SENDER_ADDRESS: no-reply@seacasia.com
+        ENABLE_AWS_S3: 'true'
+        S3_MAIN_BUCKET_NAME: seac-central-apps-development-bucket
+        CRM_RETAIL_PATH: https://prod-24.southeastasia.logic.azure.com:443/workflows/b92a50f8c0f64d90bfe20fef8c9fde8d/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+        CRM_CORPORATE_PATH: https://prod-13.southeastasia.logic.azure.com:443/workflows/098b163ef705403ebe83431dd80eb9f5/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+        CRM_CONTACT_RETAIL_PAID_PATH: https://prod-17.southeastasia.logic.azure.com:443/workflows/92632118035a4ca69272e3424a16cf6e/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+        CRM_UPDATE_MEMBER_PATH: https://prod-01.southeastasia.logic.azure.com:443/workflows/c06dffefce0f4549b7594666bc39842a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+        SIGNATURE_RETAIL: IenSjANqZF9KmAeaXMnZpl2-SSanT11UJQyyxFqk61s
+        SIGNATURE_CORPORATE: JUl5kUx4B8pmPWTM8GKemXpDXj7BvIE8IweaLjtlRro
+        SIGNATURE_CONTACT_RETAIL_PAID: N4zXbJ8hxJiJWUXmyfk3OD9_dbVz6YJTRv-07zfbs8g
+        SIGNATURE_UPDATE_MEMBER: ceYLLNUYY3lrCtTTRJh-RcQhwK0kpplzGZ2hXO854gU
+        INSTANCY_C23_BASE_URL: 'https://stagingc23-admin.yournextu.com/InstancyService.asmx'
+        INSTANCY_C23_ASTR_KEY: '56E9F505-05AF-45F2-B063-A7823395E19B'
+        INSTANCY_ALL_ACCESS_PACKAGE_BASE_URL: 'https://staging-admin.yournextu.com/InstancyService.asmx'
+        INSTANCY_ALL_ACCESS_PACKAGE_ASTR_KEY: '77EE2AF5-5567-46EB-929F-A75E769CE502'
+        INSTANCY_ONLINE_PACKAGE_BASE_URL: 'https://stagingonline-admin.yournextu.com/InstancyService.asmx'
+        INSTANCY_ONLINE_PACKAGE_ASTR_KEY: 'C9EC9572-35EC-45AB-8673-0E4D0D624FEE'
+        INSTANCY_VIRTUAL_PACKAGE_BASE_URL: 'https://stagingvirtual-admin.yournextu.com/InstancyService.asmx'
+        INSTANCY_VIRTUAL_PACKAGE_ASTR_KEY: '3631BAD0-626C-4379-9976-06AE19F12492'
+        X_CRM_TOKEN: DGGTs2N4zEyvhN6wlsLZ
+        X_SYNC_TOKEN: STNLzzPyjN96w8UBvnfR2sjX
+        X_AR_TOKEN: rA23PnQqsSR
+        JWPLAYER_SITE_ID: XUeNt1bG
+        JWPLAYER_TOKEN: NtzRh2wY2pvRPtFBUCBqE2InUjBOblNXMUNSbFYzTVhGMGEzbFZNbXB1V0doT01sRnMn
+        JWPLAYER_V1_SECRET: 3Wy06JGH3OUU7uVPr519rjLE
+        JWPLAYER_PLAYER_ID: pIYcinHU
+        JWPLAYER_WEBHOOK_SECRET: iiKk3jEbyEZXnqgv-9smomInVDJSNVpXd3piV2Q2YXpKTVRESlBiMWgzTWpWTFVrOVIn
+        ELASTICSEARCH_HOST: http://localhost:9200
+        ELASTICSEARCH_USERNAME: elastic
+        ELASTICSEARCH_PASSWORD: admin
+        SCORM_JWT_SECRET: scorm
+        SCORM_JWT_EXPIRATION_TIME_IN_SECONDS: '60'
+        ASSESSMENT_CENTER_URL: 'https://dev-assessment.seasiacenter.com'
+        ASSESSMENT_CENTER_TOKEN: '6Dsa4KF45bFykXDV'
+        REDIS_HOST: localhost
+        REDIS_PORT: '12345'
+      run: |
+        yarn workspace @seaccentral/central test
+        yarn workspace @seaccentral/central test:e2e

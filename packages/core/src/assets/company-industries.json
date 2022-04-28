@@ -1,0 +1,242 @@
+[
+  {
+    "name": "รัฐบาลและรัฐวิสาหกิจ",
+    "code": "20758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Government & State Owned Enterprises",
+    "code": "20758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การเรียนรู้และการศึกษา",
+    "code": "26758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Learning & Education",
+    "code": "26758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การเกษตร",
+    "code": "0e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Agriculture",
+    "code": "0e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "อุตสาหกรรมยานยนต์",
+    "code": "0e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Automotive",
+    "code": "10758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "ธนาคาร การเงิน ประกันภัย",
+    "code": "12758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Banking, Financial, Insurance",
+    "code": "12758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "เคมี ปิโตรเคมี",
+    "code": "14758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Chemical, Petrochemical",
+    "code": "14758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การก่อสร้าง",
+    "code": "16758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Construction",
+    "code": "16758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "ผู้บริโภค",
+    "code": "18758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Consumer",
+    "code": "18758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "อุปกรณ์อิเล็กทรอนิกส์",
+    "code": "1a758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Electronic Device",
+    "code": "1a758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การบันเทิง",
+    "code": "1c758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Entertainment",
+    "code": "1c758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "อาหารและเครื่องดื่ม",
+    "code": "1c758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Food, Beverage",
+    "code": "1c758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "สถานพยาบาล",
+    "code": "22758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Hospitality",
+    "code": "22758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "อุตสาหกรรม",
+    "code": "22758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Industrial",
+    "code": "22758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "สื่อและการสื่อสาร",
+    "code": "28758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Media & Communication",
+    "code": "28758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "องกรณ์ไม่แสวงผลกำไร",
+    "code": "28758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Non-profit",
+    "code": "28758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "เภสัชกรรมและการดูแลสุขภาพ",
+    "code": "28758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Pharmaceuticals & Healthcare",
+    "code": "28758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "พลังงาน สาธารณูปโภค การขุด",
+    "code": "2e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Power, Energy, Utilities, Mining",
+    "code": "2e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การพิมพ์",
+    "code": "2e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Printing",
+    "code": "2e758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "ทรัพย์สิน",
+    "code": "32758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Property",
+    "code": "32758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การบริการ",
+    "code": "34758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Services",
+    "code": "34758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "เทคโนโลยีสารสนเทศและการสื่อสาร",
+    "code": "34758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Technology & Communication",
+    "code": "34758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "การขนส่งโลจิสติกส์และคลังสินค้า",
+    "code": "38758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Transportation, Logistics, and Warehousing",
+    "code": "38758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "ขายส่ง, จำหน่าย, ค้าปลีก",
+    "code": "3a758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Wholesales, Distributor, Retail",
+    "code": "3a758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  },
+  {
+    "name": "อื่นๆ",
+    "code": "3c758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "th"
+  },
+  {
+    "name": "Others",
+    "code": "3c758245-3ca3-eb11-b1ac-00224855d663",
+    "locale": "en"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/auth" },
+    { "path": "./packages/central" },
+    { "path": "./packages/core" },
+    { "path": "./packages/payment" },
+    { "path": "./packages/web" },
+    { "path": "./packages/cli" },
+    { "path": "./packages/notification" }
+  ],
+  "exclude": ["**/node_modules"]
+}

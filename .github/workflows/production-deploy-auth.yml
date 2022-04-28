@@ -1,0 +1,227 @@
+name: Deploy Auth Service to Production
+
+on:
+  push:
+    paths:
+      - "packages/auth/**"
+      - "packages/core/**"
+      - "tsconfig.json"
+      - "tsconfig.node.json"
+      - "package.json"
+      - ".github/workflows/production-deploy-auth.yml"
+    branches:
+      - main
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js (12)
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+      - run: npm install -g yarn
+
+      - name: Install dependencies
+        run: |
+          yarn
+          yarn build:core
+
+      - name: Lint Auth Service
+        run: yarn workspace @seaccentral/auth lint
+
+      - name: Test Auth Service
+        env:
+          NODE_ENV: test
+          PORT: 3300
+          DB_HOST: 0.0.0.0
+          DB_NAME: seac_development
+          DB_NAME_TEST: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: seac_central
+          DB_PASSWORD: seac_central
+          DB_PORT: ${{ env.DATABASE_PORT }}
+          JWT_EXPIRATION_TIME_IN_SECONDS: 60
+          HTTP_AUTH_HEADER: auth_token
+          HTTP_REFRESH_TOKEN_HEADER: refresh_token
+          JWT_SECRET: secret
+          JWT_REFRESH_TOKEN_SECRET: refresh-secret
+          JWT_REFRESH_TOKEN_EXPIRATION_TIME_IN_SECONDS: 604800
+          LINKEDIN_CLIENTID: 86at5gx0f8tyox
+          LINKEDIN_CLIENT_SECRET: AsUgCPFHjChNWNv5
+          LINKEDIN_CALLBACK_URL: https://dev-central.seasiacenter.com/api/auth/social/linkedin/redirect
+          GOOGLE_CLIENTID: 695641619791-ffacr6k1e5rspuupltsogcen0dhmt9u9.apps.googleusercontent.com
+          GOOGLE_CLIENT_SECRET: UIoiIIT5KkFKNUb-llQus3qQ
+          GOOGLE_CALLBACK_URL: https://dev-central.seasiacenter.com/api/auth/social/google/redirect
+          FACEBOOK_APPID: 191811612502612
+          FACEBOOK_APP_SECRET: f3108121e02d661a786f39572fb71ba9
+          FACEBOOK_CALLBACK_URL: https://dev-central.seasiacenter.com/api/auth/social/facebook/redirect
+          OAUTH_SUCCESS_REDIRECT_URL: https://dev-central.seasiacenter.com/dashboard
+          ENABLE_AWS_S3: true
+          S3_MAIN_BUCKET_NAME: seac-central-apps-staging-bucket
+          CLIENT_BASE_URL: https://dev-central.seasiacenter.com
+          SEAC_SAML_IDP_PRIVATE_KEY_KEY: organization/seac/IDP/privKey.pem
+          SEAC_SAML_IDP_SIGNING_CERT_KEY: organization/seac/IDP/x509.cert
+          AUTH_BASE_URL: https://dev-central.seasiacenter.com/api/auth
+          CRM_RETAIL_PATH: https://prod-24.southeastasia.logic.azure.com:443/workflows/b92a50f8c0f64d90bfe20fef8c9fde8d/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          SIGNATURE_RETAIL: IenSjANqZF9KmAeaXMnZpl2-SSanT11UJQyyxFqk61s
+          REDIS_HOST: localhost
+          REDIS_PORT: 12345
+        run: |
+          yarn workspace @seaccentral/auth test
+          yarn workspace @seaccentral/auth test:e2e
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Setup node.js (14)
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+
+      - name: "Configure AWS credentials"
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build core
+        id: build-core
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: seac-central-apps-core-production
+          PROD_IMAGE_TAG: "${{ github.sha }}-auth"
+        run: |
+          echo "Dockerizing Core Package..."
+          docker buildx build --platform linux/amd64 -f "packages/core/Dockerfile" -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:cache-prod .
+
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:cache-prod $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          echo "::set-output name=core-image::$ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG"
+
+      - name: Get core task definitions
+        id: get-core-task-definitions
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition seac-central-apps-core-production \
+            --query taskDefinition > core-task-definition.json
+
+      - name: Fill in the new image ID in the Core task definition
+        id: fill-core-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: core-task-definition.json
+          container-name: seac-central-apps-core-container-production
+          image: ${{ steps.build-core.outputs.core-image }}
+
+      - name: Deploy Amazon ECS task definition for core
+        id: deploy-core-td
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.fill-core-task-definition.outputs.task-definition }}
+          cluster: seac-central-apps-cluster-production
+          wait-for-service-stability: true
+
+      - name: Run migrations
+        id: migration
+        env:
+          ECS_CLUSTER: seac-central-apps-cluster-production
+          ECS_TASK_DEFINITION: ${{ steps.deploy-core-td.outputs.task-definition-arn }}
+          SUBNET_PRIMARY: subnet-0500dde5e41fa023f
+          SUBNET_SECONDARY: subnet-056f67b9dd9119e6c
+          SG_TASK: sg-09a1c87e6f077c7b7
+          SG_DB_ACCESS: sg-0fce0d9460551b828
+        run: |
+          # Run custom scripts
+          echo "=== RUN CUSTOM SCRIPTS ===="
+          RUN_RESULT=$(aws ecs run-task --started-by "${{ github.sha }}-auth" \
+            --cluster ${ECS_CLUSTER} \
+            --task-definition ${ECS_TASK_DEFINITION} \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_PRIMARY}, ${SUBNET_SECONDARY}],securityGroups=[${SG_TASK}, ${SG_DB_ACCESS}],assignPublicIp=ENABLED"})
+          echo $RUN_RESULT
+          echo ""
+          if [[ $(echo $RUN_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          ARN=$(echo $RUN_RESULT|jq -r -c '.tasks[].taskArn')
+          # Wait script end
+          aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks "$ARN"
+          FINAL_RESULT=$(aws ecs describe-tasks --cluster ${ECS_CLUSTER} --tasks "$ARN")
+          echo "=== SCRIPT RESULT ===="
+          echo $FINAL_RESULT
+          if [[ $(echo $FINAL_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          EXIT_CODE=$(echo $FINAL_RESULT | jq ".tasks[0].containers[0].exitCode|tonumber" -r)
+          echo "exit $EXIT_CODE"
+          exit $EXIT_CODE
+
+      - name: Build auth
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: seac-central-apps-auth-api-production
+          PROD_IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Dockerizing Auth Package..."
+          docker buildx build --platform linux/amd64 -f "packages/auth/Dockerfile" -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:cache-prod .
+
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:cache-prod $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          echo "::set-output name=auth-app-image::$ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG"
+
+      - name: Get task definitions
+        id: get-task-definitions
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition seac-central-apps-auth-api-service-production \
+            --query taskDefinition > auth-api-task-definition.json
+
+      - name: Fill in the new image ID in the Auth API task definition
+        id: fill-auth-api-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: auth-api-task-definition.json
+          container-name: seac-central-apps-auth-api-container-production
+          image: ${{ steps.build.outputs.auth-app-image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.fill-auth-api-task-definition.outputs.task-definition }}
+          service: seac-central-apps-auth-api-service-production
+          cluster: seac-central-apps-cluster-production
+          wait-for-service-stability: false
+
+      - name: "Wait"
+        id: wait-cluster
+        timeout-minutes: 10
+        env:
+          ECS_CLUSTER: seac-central-apps-cluster-production
+          ECS_SERVICES: seac-central-apps-auth-api-service-production
+        run: |
+          aws ecs wait services-stable --cluster ${ECS_CLUSTER} --services ${ECS_SERVICES}

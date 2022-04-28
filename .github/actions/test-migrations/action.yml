@@ -1,0 +1,99 @@
+name: Test migrations
+description: Test migrations files
+
+inputs:
+  DB_HOST:
+    description: Database Host
+    required: false
+    default: 0.0.0.0
+  DB_NAME:
+    description: Database Name
+    required: true
+  DB_USERNAME:
+    description: Database Username
+    required: true
+  DB_PASSWORD:
+    description: Database Password
+    required: true
+  DB_PORT:
+    description: Database Port
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run migrations
+      shell: bash
+      env:
+        NODE_ENV: test
+        DB_HOST: ${{ inputs.DB_HOST }}
+        DB_NAME: ${{ inputs.DB_NAME }}
+        DB_NAME_TEST: ${{ inputs.DB_NAME }}
+        DB_USERNAME: ${{ inputs.DB_USERNAME }}
+        DB_PASSWORD: ${{ inputs.DB_PASSWORD }}
+        DB_PORT: ${{ inputs.DB_PORT }}
+      run: |
+        yarn workspace @seaccentral/core db:migration:run
+
+    - name: Run seed
+      shell: bash
+      env:
+        NODE_ENV: test
+        DB_HOST: ${{ inputs.DB_HOST }}
+        DB_NAME: ${{ inputs.DB_NAME }}
+        DB_NAME_TEST: ${{ inputs.DB_NAME }}
+        DB_USERNAME: ${{ inputs.DB_USERNAME }}
+        DB_PASSWORD: ${{ inputs.DB_PASSWORD }}
+        DB_PORT: ${{ inputs.DB_PORT }}
+        JWT_SECRET: secret
+        JWT_EXPIRATION_TIME_IN_SECONDS: '30'
+        HTTP_AUTH_HEADER: auth_token
+        ENABLE_AWS_SES: 'false'
+        ENABLE_AWS_S3: 'false'
+        SCORM_JWT_SECRET: scorm
+        SCORM_JWT_EXPIRATION_TIME_IN_SECONDS: '60'
+        ELASTICSEARCH_HOST: http://localhost:9200
+        ELASTICSEARCH_USERNAME: elastic
+        ELASTICSEARCH_PASSWORD: admin
+        REDIS_HOST: localhost
+        REDIS_PORT: '12345'
+      run: |
+        yarn seed
+
+    - name: Run seed:dev
+      shell: bash
+      env:
+        NODE_ENV: test
+        DB_HOST: ${{ inputs.DB_HOST }}
+        DB_NAME: ${{ inputs.DB_NAME }}
+        DB_NAME_TEST: ${{ inputs.DB_NAME }}
+        DB_USERNAME: ${{ inputs.DB_USERNAME }}
+        DB_PASSWORD: ${{ inputs.DB_PASSWORD }}
+        DB_PORT: ${{ inputs.DB_PORT }}
+        JWT_SECRET: secret
+        JWT_EXPIRATION_TIME_IN_SECONDS: '30'
+        HTTP_AUTH_HEADER: auth_token
+        ENABLE_AWS_SES: 'false'
+        ENABLE_AWS_S3: 'false'
+        SCORM_JWT_SECRET: scorm
+        SCORM_JWT_EXPIRATION_TIME_IN_SECONDS: '60'
+        ELASTICSEARCH_HOST: http://localhost:9200
+        ELASTICSEARCH_USERNAME: elastic
+        ELASTICSEARCH_PASSWORD: admin
+        REDIS_HOST: localhost
+        REDIS_PORT: '12345'
+      run: |
+        yarn seed:dev
+
+    - name: Revert all migrations
+      shell: bash
+      env:
+        NODE_ENV: test
+        DB_HOST: ${{ inputs.DB_HOST }}
+        DB_NAME: ${{ inputs.DB_NAME }}
+        DB_NAME_TEST: ${{ inputs.DB_NAME }}
+        DB_USERNAME: ${{ inputs.DB_USERNAME }}
+        DB_PASSWORD: ${{ inputs.DB_PASSWORD }}
+        DB_PORT: ${{ inputs.DB_PORT }}
+      run: |
+        yarn workspace @seaccentral/core db:migration:reset

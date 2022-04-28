@@ -1,0 +1,44 @@
+name: Test Core serivce
+description: Test Core service
+
+inputs:
+  DB_HOST:
+    description: Database Host
+    required: false
+    default: 0.0.0.0
+  DB_NAME:
+    description: Database Name
+    required: true
+  DB_USERNAME:
+    description: Database Username
+    required: true
+  DB_PASSWORD:
+    description: Database Password
+    required: true
+  DB_PORT:
+    description: Database Port
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Test Payment Service
+      shell: bash
+      env:
+        NODE_ENV: test
+        PORT: '5500'
+        DB_HOST: ${{ inputs.DB_HOST }}
+        DB_NAME: ${{ inputs.DB_NAME }}
+        DB_NAME_TEST: ${{ inputs.DB_NAME }}
+        DB_USERNAME: ${{ inputs.DB_USERNAME }}
+        DB_PASSWORD: ${{ inputs.DB_PASSWORD }}
+        DB_PORT: ${{ inputs.DB_PORT }}
+        JWT_SECRET: secret
+        JWT_EXPIRATION_TIME_IN_SECONDS: '60'
+        HTTP_AUTH_HEADER: auth_token
+        CLIENT_BASE_URL: http://localhost:3000
+        REDIS_HOST: localhost
+        REDIS_PORT: '12345'
+      run: |
+        yarn workspace @seaccentral/payment test
+        yarn workspace @seaccentral/payment test:e2e

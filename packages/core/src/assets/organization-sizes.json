@@ -1,0 +1,72 @@
+[
+  {
+    "name": "<50 คน",
+    "code": 1,
+    "locale": "th"
+  },
+  {
+    "name": "<50 employees",
+    "code": 1,
+    "locale": "en"
+  },
+  {
+    "name": "50 - 200 คน",
+    "code": 2,
+    "locale": "th"
+  },
+  {
+    "name": "50 - 200 employees",
+    "code": 2,
+    "locale": "en"
+  },
+  {
+    "name": "201-500 คน",
+    "code": 3,
+    "locale": "th"
+  },
+  {
+    "name": "201-500 employees",
+    "code": 3,
+    "locale": "en"
+  },
+  {
+    "name": "501-1,000 คน",
+    "code": 4,
+    "locale": "th"
+  },
+  {
+    "name": "501-1,000 employees",
+    "code": 4,
+    "locale": "en"
+  },
+  {
+    "name": "1,001-5,000 คน",
+    "code": 5,
+    "locale": "th"
+  },
+  {
+    "name": "1,001-5,000 employees",
+    "code": 5,
+    "locale": "en"
+  },
+  {
+    "name": "5,001-10,000 คน",
+    "code": 6,
+    "locale": "th"
+  },
+  {
+    "name": "5,001-10,000 employees",
+    "code": 6,
+    "locale": "en"
+  },
+  {
+    "name": ">10,000 คน",
+    "code": 7,
+    "locale": "th"
+  },
+  {
+    "name": ">10,000 employees",
+    "code": 7,
+    "locale": "en"
+  }
+]

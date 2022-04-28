@@ -1,0 +1,204 @@
+name: Deploy Payment Service to Staging
+
+on:
+  push:
+    paths:
+      - 'packages/payment/**'
+      - 'packages/core/**'
+      - 'tsconfig.json'
+      - 'tsconfig.node.json'
+      - 'package.json'
+      - '.github/workflows/staging-deploy-payment.yml'
+    branches:
+      - staging
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+  POSTGRES_USERNAME: seac_central
+  POSTGRES_PASSWORD: seac_central
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: ./.github/actions/node-modules
+        id: node_modules
+
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
+
+      - name: Install dependencies
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Payment service
+        uses: ./.github/actions/test-payment
+        with:
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ env.DATABASE_PORT }}
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Setup node.js (14)
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: 'Configure AWS credentials'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build core
+        id: build-core
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: seac-central-apps-core-staging
+          PROD_IMAGE_TAG: '${{ github.sha }}-payment'
+        run: |
+          echo "Dockerizing Core Package..."
+          docker buildx build --platform linux/amd64 -f "packages/core/Dockerfile" -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:cache-prod .
+
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:cache-prod $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          echo "::set-output name=core-image::$ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG"
+
+      - name: Get core task definitions
+        id: get-core-task-definitions
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition seac-central-apps-core-staging \
+            --query taskDefinition > core-task-definition.json
+
+      - name: Fill in the new image ID in the Core task definition
+        id: fill-core-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: core-task-definition.json
+          container-name: seac-central-apps-core-container-staging
+          image: ${{ steps.build-core.outputs.core-image }}
+
+      - name: Deploy Amazon ECS task definition for core
+        id: deploy-core-td
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.fill-core-task-definition.outputs.task-definition }}
+          cluster: seac-central-apps-cluster-staging
+          wait-for-service-stability: true
+
+      - name: Run migrations
+        id: migration
+        env:
+          ECS_CLUSTER: seac-central-apps-cluster-staging
+          ECS_TASK_DEFINITION: ${{ steps.deploy-core-td.outputs.task-definition-arn }}
+          SUBNET_PRIMARY: subnet-06309899908ac7e18
+          SUBNET_SECONDARY: subnet-0cffdc8f8e61eb7b2
+          SG_TASK: sg-0ea5f7ab262d079a1
+          SG_DB_ACCESS: sg-096a1424aa8ac7779
+        run: |
+          # Run custom scripts
+          echo "=== RUN CUSTOM SCRIPTS ===="
+          RUN_RESULT=$(aws ecs run-task --started-by "${{ github.sha }}-payment" \
+            --cluster ${ECS_CLUSTER} \
+            --task-definition ${ECS_TASK_DEFINITION} \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_PRIMARY}, ${SUBNET_SECONDARY}],securityGroups=[${SG_TASK}, ${SG_DB_ACCESS}],assignPublicIp=ENABLED"})
+          echo $RUN_RESULT
+          echo ""
+          if [[ $(echo $RUN_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          ARN=$(echo $RUN_RESULT|jq -r -c '.tasks[].taskArn')
+          # Wait script end
+          aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks "$ARN"
+          FINAL_RESULT=$(aws ecs describe-tasks --cluster ${ECS_CLUSTER} --tasks "$ARN")
+          echo "=== SCRIPT RESULT ===="
+          echo $FINAL_RESULT
+          if [[ $(echo $FINAL_RESULT | jq '.failures | length' -r) -ne "0" ]]; then echo "task has failures" && exit 1; fi
+          EXIT_CODE=$(echo $FINAL_RESULT | jq ".tasks[0].containers[0].exitCode|tonumber" -r)
+          echo "exit $EXIT_CODE"
+          exit $EXIT_CODE
+
+      - name: Build payment
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: seac-central-apps-payment-api-staging
+          PROD_IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Dockerizing Payment API Package..."
+          docker buildx build --platform linux/amd64 -f "packages/payment/Dockerfile" -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:cache-prod .
+
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:cache-prod $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG
+          echo "::set-output name=payment-app-image::$ECR_REGISTRY/$ECR_REPOSITORY:$PROD_IMAGE_TAG"
+
+      - name: Get task definitions
+        id: get-task-definitions
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition seac-central-apps-payment-api-service-staging \
+            --query taskDefinition > payment-api-task-definition.json
+
+      - name: Fill in the new image ID in the Central task definition
+        id: fill-payment-api-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: payment-api-task-definition.json
+          container-name: seac-central-apps-payment-api-container-staging
+          image: ${{ steps.build.outputs.payment-app-image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.fill-payment-api-task-definition.outputs.task-definition }}
+          service: seac-central-apps-payment-api-service-staging
+          cluster: seac-central-apps-cluster-staging
+          wait-for-service-stability: false
+
+      - name: 'Wait'
+        id: wait-cluster
+        timeout-minutes: 10
+        env:
+          ECS_CLUSTER: seac-central-apps-cluster-staging
+          ECS_SERVICES: seac-central-apps-payment-api-service-staging
+        run: |
+          aws ecs wait services-stable --cluster ${ECS_CLUSTER} --services ${ECS_SERVICES}

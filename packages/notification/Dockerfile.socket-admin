@@ -1,0 +1,12 @@
+FROM node:alpine
+
+RUN apk add --update python3 make g++ dumb-init \
+   && rm -rf /var/cache/apk/*
+
+RUN yarn add @socket.io/admin-ui http-server
+
+USER node
+
+EXPOSE 8080
+
+CMD [ "dumb-init", "yarn", "http-server", "node_modules/@socket.io/admin-ui/ui/dist" ]

@@ -1,0 +1,136 @@
+name: Deploy Central Service to PreProduction
+
+on:
+  push:
+    paths:
+      - 'packages/central/**'
+      - 'packages/core/**'
+      - 'tsconfig.json'
+      - 'tsconfig.node.json'
+      - 'package.json'
+      - '.github/workflows/preprod-deploy-central.yml'
+    branches:
+      - preprod
+      - remove-instancy-integration
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build Core package
+        run: yarn build:core
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+      - name: Test Central Service
+        env:
+          IS_PRODUCTION: false
+          NODE_ENV: test
+          PORT: 4400
+          DB_HOST: 0.0.0.0
+          DB_NAME: seac_development
+          DB_NAME_TEST: ${{ env.POSTGRES_DB }}
+          DB_USERNAME: seac_central
+          DB_PASSWORD: seac_central
+          DB_PORT: ${{ env.DATABASE_PORT }}
+          JWT_SECRET: secret
+          JWT_EXPIRATION_TIME_IN_SECONDS: 80
+          HTTP_AUTH_HEADER: auth_token
+          CLIENT_BASE_URL: http://localhost:3000
+          AUTH_BASE_URL: http://localhost:3300/api/auth
+          ENABLE_AWS_SES: false
+          AWS_REGION: ap-southeast-1
+          AWS_CREDENTIAL_PROFILE: default
+          AWS_SES_SENDER_ADDRESS: no-reply@seacasia.com
+          ENABLE_AWS_S3: true
+          S3_MAIN_BUCKET_NAME: seac-central-apps-development-bucket
+          CRM_RETAIL_PATH: https://prod-24.southeastasia.logic.azure.com:443/workflows/b92a50f8c0f64d90bfe20fef8c9fde8d/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          CRM_CORPORATE_PATH: https://prod-13.southeastasia.logic.azure.com:443/workflows/098b163ef705403ebe83431dd80eb9f5/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          CRM_UPDATE_MEMBER_PATH: https://prod-01.southeastasia.logic.azure.com:443/workflows/c06dffefce0f4549b7594666bc39842a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=
+          SIGNATURE_RETAIL: IenSjANqZF9KmAeaXMnZpl2-SSanT11UJQyyxFqk61s
+          SIGNATURE_CORPORATE: JUl5kUx4B8pmPWTM8GKemXpDXj7BvIE8IweaLjtlRro
+          SIGNATURE_UPDATE_MEMBER: ceYLLNUYY3lrCtTTRJh-RcQhwK0kpplzGZ2hXO854gU
+          INSTANCY_C23_BASE_URL: 'https://stagingc23-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_C23_ASTR_KEY: '56E9F505-05AF-45F2-B063-A7823395E19B'
+          INSTANCY_ALL_ACCESS_PACKAGE_BASE_URL: 'https://staging-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_ALL_ACCESS_PACKAGE_ASTR_KEY: '77EE2AF5-5567-46EB-929F-A75E769CE502'
+          INSTANCY_ONLINE_PACKAGE_BASE_URL: 'https://stagingonline-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_ONLINE_PACKAGE_ASTR_KEY: 'C9EC9572-35EC-45AB-8673-0E4D0D624FEE'
+          INSTANCY_VIRTUAL_PACKAGE_BASE_URL: 'https://stagingvirtual-admin.yournextu.com/InstancyService.asmx'
+          INSTANCY_VIRTUAL_PACKAGE_ASTR_KEY: '3631BAD0-626C-4379-9976-06AE19F12492'
+          X_CRM_TOKEN: DGGTs2N4zEyvhN6wlsLZ
+          X_SYNC_TOKEN: STNLzzPyjN96w8UBvnfR2sjX
+          X_AR_TOKEN: rA23PnQqsSR
+          JWPLAYER_SITE_ID: XUeNt1bG
+          JWPLAYER_TOKEN: NtzRh2wY2pvRPtFBUCBqE2InUjBOblNXMUNSbFYzTVhGMGEzbFZNbXB1V0doT01sRnMn
+          JWPLAYER_WEBHOOK_SECRET: ycuKEBCNPMK7m4Wae-UmYGInTjJkS01rWXhTblJIY1ZwSGRHUk5iVU5yYVhGd05FNU4n
+          ELASTICSEARCH_HOST: http://localhost:9200
+          ELASTICSEARCH_USERNAME: elastic
+          ELASTICSEARCH_PASSWORD: admin
+          SCORM_JWT_SECRET: scorm
+          SCORM_JWT_EXPIRATION_TIME_IN_SECONDS: 60
+          REDIS_HOST: localhost
+          REDIS_PORT: 12345
+        run: |
+          yarn workspace @seaccentral/central test
+          yarn workspace @seaccentral/central test:e2e
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: preprod-central
+      url: https://preprod-central.seasiacenter.com/api/central/v1/admin/healthcheck
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Deploy Central service
+        uses: ./.github/actions/deploy-central
+        with:
+          AWS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          ECS_CLUSTER: seac-central-apps-cluster-preprod
+          CORE_ECS_SERVICES: seac-central-apps-core-preprod
+          CORE_ECS_CONTAINER: seac-central-apps-core-container-preprod
+          CORE_ECR_REPOSITORY: seac-central-apps-core-preprod
+          CENTRAL_ECS_SERVICES: seac-central-apps-central-api-service-preprod
+          CENTRAL_ECS_CONTAINER: seac-central-apps-central-api-container-preprod
+          CENTRAL_ECR_REPOSITORY: seac-central-apps-central-api-preprod
+          SUBNET_PRIMARY: subnet-09cc64aeb778f405e
+          SUBNET_SECONDARY: subnet-080bb4e8a07fbcef7
+          SG_TASK: sg-0fb1bcb0c79e0f796
+          SG_DB_ACCESS: sg-01d62526bd0d30b4f
+          DISABLE_DOCKER_CACHE: true
