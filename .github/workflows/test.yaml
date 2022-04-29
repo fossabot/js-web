@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
 
-    runs-on: my-custom-org-runner
+    runs-on: oozou-org-runner
     steps:
       - name: Checkout
         uses: actions/checkout@master
