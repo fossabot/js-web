@@ -193,7 +193,7 @@ jobs:
       - name: Test Auth service
         uses: ./.github/actions/test-auth
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-payment
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
