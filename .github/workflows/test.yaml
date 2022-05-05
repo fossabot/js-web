@@ -59,7 +59,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-migration
           POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           TZ: UTC
@@ -110,7 +110,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-core
           POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           TZ: UTC
@@ -158,7 +158,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-auth
           POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           TZ: UTC
@@ -206,7 +206,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-central
           POSTGRES_USER: seac_central
           POSTGRES_PASSWORD: seac_central
           TZ: UTC
@@ -254,7 +254,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-payment
           POSTGRES_USER: seac_central
           POSTGRES_PASSWORD: seac_central
           TZ: UTC
@@ -323,7 +323,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-notification
           POSTGRES_USER: seac_central
           POSTGRES_PASSWORD: seac_central
           TZ: UTC
