@@ -103,7 +103,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-core:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
@@ -151,7 +151,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-auth:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
@@ -199,7 +199,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-central:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
@@ -247,7 +247,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-payment:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
