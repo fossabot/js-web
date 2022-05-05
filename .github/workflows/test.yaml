@@ -97,7 +97,7 @@ jobs:
       - name: Test migrations
         uses: ./.github/actions/test-migrations
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-migration
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
@@ -145,7 +145,7 @@ jobs:
       - name: Test Core service
         uses: ./.github/actions/test-core
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-core
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
@@ -193,7 +193,7 @@ jobs:
       - name: Test Auth service
         uses: ./.github/actions/test-auth
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}-test-payment
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-auth
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
@@ -241,7 +241,7 @@ jobs:
       - name: Test Central service
         uses: ./.github/actions/test-central
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-central
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
@@ -289,7 +289,7 @@ jobs:
       - name: Test Payment service
         uses: ./.github/actions/test-payment
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-payment
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
@@ -358,7 +358,7 @@ jobs:
       - name: Test Notification service
         uses: ./.github/actions/test-notification
         with:
-          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_NAME: ${{ env.POSTGRES_DB }}-test-notification
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
