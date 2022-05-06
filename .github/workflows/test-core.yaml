@@ -11,7 +11,7 @@ env:
   
 jobs:  
   test-core:
-    runs-on: self-hosted
+    runs-on: oozou-eks-web
     services:
       postgres:
         image: postgres:13
