@@ -29,18 +29,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
-      #- name: Setup node.js
-       # uses: ./.github/actions/node-modules
-      #  id: node_modules
-        
       - name: Setup node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
+        uses: ./.github/actions/node-modules
+        id: node_modules
+        
+
           
-     # - name: Get yarn cache
-      #  if: steps.node_modules.outputs.cache-hit != 'true'
-      #  uses: ./.github/actions/yarn-cache
+      - name: Get yarn cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: ./.github/actions/yarn-cache
 
       - name: Install dependencies
         if: steps.node_modules.outputs.cache-hit != 'true'
