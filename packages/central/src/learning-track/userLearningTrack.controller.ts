@@ -14,15 +14,22 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
-import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
+
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import {
   BaseResponseDto,
   getPaginationResponseParams,
 } from '@seaccentral/core/dist/dto/BaseResponse.dto';
+import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
 import { LanguageCode } from '@seaccentral/core/dist/language/Language.entity';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+
 import IRequestWithUser from '../invitation/interface/IRequestWithUser';
-import { GetAllEnrolledLearningTracksQueryDto } from './dto/GetAllEnrolledLearningTracksQuery.dto';
 import { UserLearningTrackService } from './userLearningTrack.service';
+import { GetAllEnrolledLearningTracksQueryDto } from './dto/GetAllEnrolledLearningTracksQuery.dto';
 
 @Controller('v1/user-learning-tracks')
 @ApiTags('User Learning Track')
@@ -70,7 +77,13 @@ export class UserLearningTrackController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.LEARNING_TRACK,
+      subCategory: userLogSubCategory.ARCHIVE_LEARNING_TRACK,
+    }),
+  )
   @Post('archived-learning-tracks')
   async addArchiveLearningTrack(
     @Body('learningTrackId') learningTrackId: string,
@@ -86,7 +99,13 @@ export class UserLearningTrackController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.LEARNING_TRACK,
+      subCategory: userLogSubCategory.UNARCHIVE_LEARNING_TRACK,
+    }),
+  )
   @Delete('archived-learning-tracks')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeArchiveLearningTrack(

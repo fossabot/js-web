@@ -103,7 +103,7 @@ export const RolePolicyManagementPage = () => {
         },
         {
           name: t('rolePolicyManagementPage.removeRole'),
-          isDisabled: !currentRole,
+          isDisabled: !currentRole || currentRole.isSystemDefined,
           action: () => removeRoleModal.toggle(),
           activeIcon: (
             <FaTrashAlt

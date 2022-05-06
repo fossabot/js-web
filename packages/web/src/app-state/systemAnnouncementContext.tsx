@@ -55,7 +55,7 @@ export const SystemAnnouncementContextProvider = ({
           let parsedViewState: Record<IUser['id'], string> | null = null;
 
           try {
-            parsedViewState = JSON.parse(viewState);
+            parsedViewState = JSON.parse(viewState) || {};
           } catch (err) {
             console.warn('Malformed system announcement state');
             window.localStorage.removeItem(

@@ -650,3 +650,18 @@ variable "cdn_url" {
   type        = string
   description = "CDN URL"
 }
+
+variable "aws_dynamodb_main_table_name" {
+  type        = string
+  description = "Table name of dynamodb for user activity log"
+}
+
+variable "dynamodb_read_capacity" {
+  type        = string
+  description = "Reads per second for dynamodb"
+}
+
+variable "dynamodb_write_capacity" {
+  type        = string
+  description = "Writes per second for dynamodb"
+}

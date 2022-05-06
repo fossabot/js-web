@@ -219,14 +219,8 @@ export class UsersService extends TransactionFor<UsersService> {
         email: localSignupBody.email,
         lastName: localSignupBody.lastName,
         firstName: localSignupBody.firstName,
-        emailVerificationKey: uuidv4(),
-        emailVerificationRequestDateUTC: new Date(),
         ...extra,
       });
-
-      if (!user.emailVerificationKey) {
-        throw new Error("Can't generate email verification key.");
-      }
 
       await this.usersRepository.save(user);
 
@@ -237,13 +231,6 @@ export class UsersService extends TransactionFor<UsersService> {
       await this.userRoleRepository.save({
         user,
         role: localSignupBody.role || defaultRole,
-      });
-
-      this.sendEmailVerificationEmail({
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        key: user.emailVerificationKey as string,
       });
 
       return user;
@@ -659,6 +646,8 @@ export class UsersService extends TransactionFor<UsersService> {
       : params;
 
     if (user && user.email) {
+      const emailPath = params.id ? 'setup-account' : 'accept-invitation';
+
       this.notificationProducer.sendEmail({
         key: EmailNotificationSubCategoryKey.MEMBERSHIP_WELCOME,
         language:
@@ -676,7 +665,7 @@ export class UsersService extends TransactionFor<UsersService> {
           [NotificationVariableDict.ACCOUNT_ACTIVATION_LINK
             .alias]: `${this.configService.get(
             'CLIENT_BASE_URL',
-          )}/setup-account?token=${params.token}`,
+          )}/${emailPath}?token=${params.token}`,
         },
       });
     }
@@ -926,43 +915,44 @@ export class UsersService extends TransactionFor<UsersService> {
     return true;
   }
 
-  async sendEmailVerificationEmail(params: {
-    fullName?: string;
-    email?: string;
-    id?: string;
-    key: string;
-  }) {
-    const user = params.id
-      ? await this.usersRepository
-          .createQueryBuilder('user')
-          .where('user.id = :userId', { userId: params.id })
-          .select([
-            'user.id',
-            'user.firstName',
-            'user.lastName',
-            'user.email',
-            'user.emailNotificationLanguage',
-          ])
-          .getOne()
-      : params;
-
-    if (params.key && user && user.email) {
-      this.notificationProducer.sendEmail({
-        key: EmailNotificationSubCategoryKey.MEMBERSHIP_VERIFY_EMAIL,
-        language:
-          'emailNotificationLanguage' in user
-            ? user?.emailNotificationLanguage
-            : LanguageCode.EN,
-        to: user.email,
-        replacements: {
-          [NotificationVariableDict.FULL_NAME.alias]: user.fullName,
-          [NotificationVariableDict.ACCOUNT_ACTIVATION_LINK
-            .alias]: `${this.configService.get(
-            'CLIENT_BASE_URL',
-          )}/confirm-email?key=${params.key}`,
-        },
-      });
+  async sendEmailVerificationEmail(userId: string) {
+    const emailVerificationKey = uuidv4();
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .where('user.id = :userId', { userId })
+      .select([
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+        'user.email',
+        'user.emailNotificationLanguage',
+      ])
+      .getOne();
+    if (!user) {
+      throw new Error('User not found');
     }
+    await this.usersRepository.update(
+      { id: user.id },
+      {
+        emailVerificationKey,
+        emailVerificationRequestDateUTC: new Date(),
+      },
+    );
+    this.notificationProducer.sendEmail({
+      key: EmailNotificationSubCategoryKey.MEMBERSHIP_VERIFY_EMAIL,
+      language:
+        'emailNotificationLanguage' in user
+          ? user?.emailNotificationLanguage
+          : LanguageCode.EN,
+      to: user.email as string,
+      replacements: {
+        [NotificationVariableDict.FULL_NAME.alias]: user.fullName,
+        [NotificationVariableDict.ACCOUNT_ACTIVATION_LINK
+          .alias]: `${this.configService.get(
+          'CLIENT_BASE_URL',
+        )}/confirm-email?key=${emailVerificationKey}`,
+      },
+    });
   }
 
   async confirmEmail(key: string) {

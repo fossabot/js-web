@@ -47,9 +47,14 @@ import { CourseCategory } from '@seaccentral/core/dist/course/CourseCategory.ent
 import { BACKEND_ADMIN_CONTROL } from '@seaccentral/core/dist/access-control/constants';
 import { CourseSubCategory } from '@seaccentral/core/dist/course/CourseSubCategory.entity';
 import { LearningContentFile } from '@seaccentral/core/dist/learning-content-file/LearningContentFile.entity';
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import { NotificationProducer } from '@seaccentral/core/dist/queue/notification.producer';
-import { PushNotificationSubCategoryKey } from '@seaccentral/core/dist/notification/enum/PushNotificationSubCategory.enum';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
 import { NotificationVariableDict as NV } from '@seaccentral/core/dist/notification/NotificationVariableDict';
+import { PushNotificationSubCategoryKey } from '@seaccentral/core/dist/notification/enum/PushNotificationSubCategory.enum';
 
 import {
   CourseResponseDto,
@@ -224,6 +229,12 @@ export class CourseController {
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.ENROLL,
+    }),
+  )
   @Post(':id/enroll')
   async enroll(
     @Param('id') courseId: string,
@@ -329,6 +340,11 @@ export class CourseController {
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+    }),
+  )
   @Get(':id/detail')
   async details(
     @Param('id') id: string,
@@ -440,6 +456,11 @@ export class CourseController {
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+    }),
+  )
   @Get('course-outline/:courseOutlineId')
   async getCourseOutlineById(
     @Request() req: IRequestWithUser,
@@ -517,6 +538,11 @@ export class CourseController {
     ),
     CourseSubscriptionPlanActivator,
   )
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+    }),
+  )
   @Policy(BACKEND_ADMIN_CONTROL.ACCESS_ADMIN_PORTAL)
   async generateDownloadUrl(@Param('materialId') materialId: string) {
     const material = await this.internalMaterialService.findOneMaterial({
@@ -538,6 +564,11 @@ export class CourseController {
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+    }),
+  )
   @Get(':id/media')
   async getAllCourseMedia(
     @Param('id') courseId: string,
@@ -576,6 +607,12 @@ export class CourseController {
   }
 
   @UseGuards(JwtAuthGuard, CourseSubscriptionPlanActivator)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.VALIDATE_SUBSCRIPTION_PLAN,
+    }),
+  )
   @Post(':courseId/validate-subscription-plan')
   async validateSubscriptionPlan(@Param('courseId') courseId: string) {
     const response = new BaseResponseDto();

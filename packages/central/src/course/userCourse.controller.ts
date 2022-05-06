@@ -20,23 +20,30 @@ import {
   getPaginationResponseParams,
 } from '@seaccentral/core/dist/dto/BaseResponse.dto';
 import { LanguageCode } from '@seaccentral/core/dist/language/Language.entity';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
+
+import { UserCourseService } from './userCourse.service';
 import IRequestWithUser from '../invitation/interface/IRequestWithUser';
 import { GetAllEnrolledCoursesQueryDto } from './dto/GetAllEnrolledCoursesQuery.dto';
-import { UserCourseService } from './userCourse.service';
-import { UserCourseProgressService } from './userCourseProgress.service';
 
 @Controller('v1/user-courses')
 @ApiTags('User Course')
 @ApiSecurity('auth_token')
 export class UserCourseController {
-  constructor(
-    private readonly userCouresService: UserCourseService,
-    private readonly userCouresProgressService: UserCourseProgressService,
-  ) {}
+  constructor(private readonly userCouresService: UserCourseService) {}
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('me')
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.GENERAL,
+    }),
+  )
   async getAllEnrolledCourses(
     @Query() dto: GetAllEnrolledCoursesQueryDto,
     @Req() req: IRequestWithUser,
@@ -57,6 +64,11 @@ export class UserCourseController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('statuses')
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.GENERAL,
+    }),
+  )
   async getAllEnrolledCourseStatuses(
     @Query() dto: GetAllEnrolledCoursesQueryDto,
     @Req() req: IRequestWithUser,
@@ -72,6 +84,12 @@ export class UserCourseController {
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.ARCHIVE_COURSE,
+    }),
+  )
   @Post('archived-courses')
   async addArchiveCourse(
     @Body('courseId') courseId: string,
@@ -89,6 +107,12 @@ export class UserCourseController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Delete('archived-courses')
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.UNARCHIVE_COURSE,
+    }),
+  )
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeArchiveCourse(
     @Body('courseId') courseId: string,

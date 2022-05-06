@@ -10,11 +10,14 @@ import { FileImportHistory } from '@seaccentral/core/dist/file-import/FileImport
 import { CourseSessionBooking } from '@seaccentral/core/dist/course/CourseSessionBooking.entity';
 import { ExternalProviderModule } from '@seaccentral/core/dist/external-package-provider/external.provider.module';
 
+import { PendingMember } from '@seaccentral/core/dist/user/PendingMember.entity';
 import { TaskService } from './task.service';
 import { SearchModule } from '../search/search.module';
 import { CourseModule } from '../course/course.module';
 import { CertificateModule } from '../certificate/certificate.module';
 import { LearningTrackModule } from '../learning-track/learningTrack.module';
+import { PendingMemberService } from './pendingMember.service';
+import { WebhookModule } from '../webhook/webhook.module';
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { LearningTrackModule } from '../learning-track/learningTrack.module';
     CourseModule,
     LearningTrackModule,
     CertificateModule,
+    WebhookModule,
     TypeOrmModule.forFeature([
       UserAuthProvider,
       UserUploadHistory,
@@ -31,8 +35,9 @@ import { LearningTrackModule } from '../learning-track/learningTrack.module';
       PasswordSetting,
       FileImportHistory,
       CourseSessionBooking,
+      PendingMember,
     ]),
   ],
-  providers: [TaskService],
+  providers: [TaskService, PendingMemberService],
 })
 export class TaskModule {}

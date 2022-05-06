@@ -13,24 +13,31 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
-import { BaseResponseDto } from '@seaccentral/core/dist/dto/BaseResponse.dto';
-import { User } from '@seaccentral/core/dist/user/User.entity';
-import { CRMMemberService } from '@seaccentral/core/dist/crm/crmMember.service';
-import { Request } from 'express';
 import mime from 'mime';
+import { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger';
+
+import { User } from '@seaccentral/core/dist/user/User.entity';
+import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
 import { deleteObjectFromS3 } from '@seaccentral/core/dist/utils/s3';
-import { BACKEND_ADMIN_CONTROL } from '@seaccentral/core/dist/access-control/constants';
+import { BaseResponseDto } from '@seaccentral/core/dist/dto/BaseResponse.dto';
 import { Policy } from '@seaccentral/core/dist/access-control/policy.decorator';
+import { CRMMemberService } from '@seaccentral/core/dist/crm/crmMember.service';
 import { PolicyGuard } from '@seaccentral/core/dist/access-control/policy.guard';
+import { BACKEND_ADMIN_CONTROL } from '@seaccentral/core/dist/access-control/constants';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import * as s3UrlConditionBuilder from '@seaccentral/core/dist/utils/s3UrlConditionBuilder';
+
+import { ProfileService } from './profile.service';
+import { S3_AVATAR_FOLDER } from '../utils/constants';
+import { UploadService } from '../upload/upload.service';
 import { GetProfileInfoDto } from './dto/GetProfileInfo.dto';
 import { UpdateProfileInfoDto } from './dto/UpdateProfileInfo.dto';
-import { ProfileService } from './profile.service';
 import IRequestWithUser from '../invitation/interface/IRequestWithUser';
-import { UploadService } from '../upload/upload.service';
-import { S3_AVATAR_FOLDER } from '../utils/constants';
 import { UpdateEmailNotificationLanguage } from './dto/UpdateEmailNotificationLanguage.dto';
 
 @Controller('v1/profile')
@@ -44,7 +51,12 @@ export class ProfileController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.PROFILE,
+    }),
+  )
   async getProfileInfo(@Req() request: IRequestWithUser) {
     const user = await this.profileService.getUserProfileInfo(request.user.id);
     const response = new BaseResponseDto<GetProfileInfoDto>();
@@ -73,7 +85,13 @@ export class ProfileController {
   @Put()
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.PROFILE,
+      subCategory: userLogSubCategory.UPDATE_PROFILE_INFO,
+    }),
+  )
   async updateProfileInfo(
     @Req() request: Request,
     @Body() updateProfileInfo: UpdateProfileInfoDto,
@@ -149,7 +167,13 @@ export class ProfileController {
 
   @Post('avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.PROFILE,
+      subCategory: userLogSubCategory.UPDATE_PROFILE_INFO,
+    }),
+  )
   async uploadAvatar(@Req() request: IRequestWithUser) {
     const { user } = request;
     const { profileImageKey } = user;

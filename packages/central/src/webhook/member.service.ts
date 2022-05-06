@@ -17,11 +17,13 @@ import {
   ExternalAuthProviderType,
   UserAuthProvider,
 } from '@seaccentral/core/dist/user/UserAuthProvider.entity';
+import { PendingMember } from '@seaccentral/core/dist/user/PendingMember.entity';
 import { UsersService } from '@seaccentral/core/dist/user/users.service';
 import { UserTaxInvoice } from '@seaccentral/core/dist/user/UserTaxInvoice.entity';
 import { UserThirdParty } from '@seaccentral/core/dist/user/UserThirdParty.entity';
 import { UserThirdPartyType } from '@seaccentral/core/dist/user/UserThirdPartyType.enum';
 import { TransactionFor } from '@seaccentral/core/dist/utils/withTransaction';
+import { isBefore, isAfter } from 'date-fns';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { GroupService } from '../group/group.service';
@@ -65,6 +67,8 @@ export class MemberService extends TransactionFor<MemberService> {
     private districtRepository: Repository<District>,
     @InjectRepository(Subdistrict)
     private subdistrictRepository: Repository<Subdistrict>,
+    @InjectRepository(PendingMember)
+    private pendingMemberRepository: Repository<PendingMember>,
     moduleRef: ModuleRef,
   ) {
     super(moduleRef);
@@ -81,16 +85,14 @@ export class MemberService extends TransactionFor<MemberService> {
 
       await this.assignSubscription(user, member, organization);
 
-      if (organization?.isIdentityProvider) {
-        const uap = this.userAuthProviderRepository.create({
-          userId: user.id,
-          provider: ExternalAuthProviderType.SAMLSSO,
-          organization,
-        });
-
-        await this.userAuthProviderRepository.save(uap);
+      if (isBefore(new Date(member.StartPackage), new Date())) {
+        await this.activateMember(user, organization);
       } else {
-        await this.sendInvitation(user);
+        await this.pendingMemberRepository.save({
+          user,
+          organization,
+          activationDate: member.StartPackage,
+        });
       }
 
       return {
@@ -153,6 +155,17 @@ export class MemberService extends TransactionFor<MemberService> {
             HttpStatus.BAD_REQUEST,
           );
         }
+      }
+      if (isBefore(new Date(member.StartPackage), new Date())) {
+        await this.activateMember(user, organization);
+      } else {
+        await this.pendingMemberRepository.update(
+          { userId: user.id },
+          {
+            organization,
+            activationDate: new Date(member.StartPackage),
+          },
+        );
       }
 
       if (member.Method === 0) {
@@ -383,7 +396,7 @@ export class MemberService extends TransactionFor<MemberService> {
     }
   }
 
-  async sendInvitation(user: User) {
+  async sendInvitation(user: User, staleable: boolean) {
     try {
       await this.checkInviationExist(user.email as string);
       const token = uuidv4();
@@ -396,7 +409,7 @@ export class MemberService extends TransactionFor<MemberService> {
         email: user.email as string,
         lastName: user.lastName as string,
         firstName: user.firstName as string,
-        user,
+        user: staleable ? undefined : user,
       });
       await this.invitationRepository.save(newInvitation);
 
@@ -608,5 +621,20 @@ export class MemberService extends TransactionFor<MemberService> {
     });
 
     return result;
+  }
+
+  async activateMember(user: User, organization?: Organization | null) {
+    if (organization?.isIdentityProvider) {
+      const uap = this.userAuthProviderRepository.create({
+        userId: user.id,
+        provider: ExternalAuthProviderType.SAMLSSO,
+        organization,
+      });
+
+      await this.userAuthProviderRepository.save(uap);
+    } else {
+      await this.sendInvitation(user, true);
+    }
+    await this.pendingMemberRepository.delete({ userId: user.id });
   }
 }

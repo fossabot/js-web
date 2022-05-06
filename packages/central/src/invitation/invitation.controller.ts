@@ -6,12 +6,15 @@ import {
   Post,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
-
+import { userLogCategory } from '@seaccentral/core/dist/user-log/constants';
 import { UserIdentifiers } from '@seaccentral/core/dist/dto/UserIdentifiers.dto';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+
 import { InvitationService } from './invitation.service';
 import { InviteUserBody } from './dto/InviteUserBody.dto';
 import IRequestWithUser from './interface/IRequestWithUser';
@@ -42,6 +45,11 @@ export class InvitationController {
 
   @Post(':token/validate')
   @HttpCode(200)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.GENERAL,
+    }),
+  )
   validateToken(@Param('token') token: string) {
     return this.invitationService.validateToken(token);
   }

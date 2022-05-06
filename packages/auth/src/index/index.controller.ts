@@ -167,6 +167,9 @@ export class IndexController {
         await this.usersService
           .withTransaction(manager)
           .invalidateInvitationToken(invitationSignupBody.token);
+        this.usersService
+          .withTransaction(manager)
+          .sendEmailVerificationEmail(newUser.id);
         const response = new BaseResponseDto<Partial<LocalSignupResponse>>();
         response.data = {
           accessToken,

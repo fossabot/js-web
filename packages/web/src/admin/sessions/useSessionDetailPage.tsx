@@ -34,9 +34,11 @@ export function useSessionDetailPage() {
 
   const isAllowedToMarkStudents = useMemo(
     () =>
-      [CourseSessionStatus.IN_PROGRESS, CourseSessionStatus.COMPLETED].includes(
-        courseSession?.sessionStatus,
-      ),
+      [
+        CourseSessionStatus.NOT_STARTED,
+        CourseSessionStatus.IN_PROGRESS,
+        CourseSessionStatus.COMPLETED,
+      ].includes(courseSession?.sessionStatus),
     [courseSession?.sessionStatus],
   );
 

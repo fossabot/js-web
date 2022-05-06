@@ -7,7 +7,7 @@ import { UsersService } from '@seaccentral/core/dist/user/users.service';
 import { SocialSignupRequest } from '@seaccentral/core/dist/dto/SocialSignupRequest.dto';
 import { ExternalAuthProviderType } from '@seaccentral/core/dist/user/UserAuthProvider.entity';
 import { User } from '@seaccentral/core/dist/user/User.entity';
-import { DeepPartial } from 'typeorm';
+import { Connection, DeepPartial } from 'typeorm';
 import { TransactionFor } from '@seaccentral/core/dist/utils/withTransaction';
 import { ModuleRef } from '@nestjs/core';
 import { OAuthException } from './oauth.exception';
@@ -19,6 +19,7 @@ export class SocialService extends TransactionFor<SocialService> {
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly connection: Connection,
     moduleRef: ModuleRef,
   ) {
     super(moduleRef);
@@ -39,21 +40,28 @@ export class SocialService extends TransactionFor<SocialService> {
       refreshToken: socialRefreshToken,
       provider,
     } = socialCredential;
-    const user = await this.usersService.create(
-      {
-        firstName,
-        lastName,
-        email,
-      },
-      extra,
-    );
-    await this.usersService.createProvider({
-      user,
-      provider,
-      accessToken: socialAccessToken,
-      refreshToken: socialRefreshToken,
+    const newUser = await this.connection.transaction(async (manager) => {
+      const user = await this.usersService.withTransaction(manager).create(
+        {
+          firstName,
+          lastName,
+          email,
+        },
+        extra,
+      );
+      await this.usersService.withTransaction(manager).createProvider({
+        user,
+        provider,
+        accessToken: socialAccessToken,
+        refreshToken: socialRefreshToken,
+      });
+      this.usersService
+        .withTransaction(manager)
+        .sendEmailVerificationEmail(user.id);
+
+      return user;
     });
-    const token = this.authService.generateToken(user, 60, { provider });
+    const token = this.authService.generateToken(newUser, 60, { provider });
 
     return token;
   }

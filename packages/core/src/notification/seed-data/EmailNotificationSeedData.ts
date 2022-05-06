@@ -37,7 +37,7 @@ export const EmailNotificationSeedData: EmailNotificationTemplateType = {
     en: {
       subject: `Welcome to YourNextU: {{${NV.PACKAGE_NAME.alias}}}`,
 
-      bodyHTML: `<p><strong>Dear {{${NV.FULL_NAME.alias}}}}</strong>,</p>,
+      bodyHTML: `<p><strong>Dear {{${NV.FULL_NAME.alias}}}</strong>,</p>,
       <p>Welcome to YourNextU. We are pleased that you decided to become part of our family!</p>
       <p><strong>Username: {{${NV.EMAIL.alias}}}</strong></p>
       <p>Login to start your journey with 1 easy step</p>

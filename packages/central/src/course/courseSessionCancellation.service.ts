@@ -277,7 +277,8 @@ export class CourseSessionCancellationService extends TransactionFor<CourseSessi
             reason,
           })
           .catch((e) => {
-            console.error('error', e);
+            // eslint-disable-next-line no-console
+            console.error('Error wile deleting course session booking', e);
           });
       }),
     );

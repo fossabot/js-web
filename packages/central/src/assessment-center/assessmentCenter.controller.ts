@@ -11,19 +11,26 @@ import {
   Put,
   Body,
 } from '@nestjs/common';
+import { Connection, UpdateResult } from 'typeorm';
+
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
 import IRequestWithUser from '@seaccentral/core/dist/user/IRequestWithUser';
 import { BaseResponseDto } from '@seaccentral/core/dist/dto/BaseResponse.dto';
 import { LanguageCode } from '@seaccentral/core/dist/language/Language.entity';
 import { ExternalAssessment } from '@seaccentral/core/dist/assessment/ExternalAssessment.entity';
-import { Connection, UpdateResult } from 'typeorm';
-import { AssessmentCenterService } from './assessmentCenter.service';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+
 import {
   CreateAssessmentResponseBody,
   RegenerateAssessmentResponseBody,
 } from './interface/IassessmentCenter';
 import { AssessmentCenterGuard } from './assessmentCenter.guard';
 import { UpdateAssessmentDto } from './dto/UpdateAssessment.dto';
+import { AssessmentCenterService } from './assessmentCenter.service';
 import { AssessmentProgressService } from './assessmentProgress.service';
 
 @Controller('v1/assessment-center')
@@ -60,6 +67,12 @@ export class AssessmentCenterController {
 
   @Post(':courseOutlineId')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.ASSESSMENT,
+    }),
+  )
   async takeAssessment(
     @Req() req: IRequestWithUser,
     @Headers('accept-language') acceptLanguage: LanguageCode,
@@ -106,7 +119,13 @@ export class AssessmentCenterController {
 
   @Put(':courseOutlineId')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.ASSESSMENT,
+    }),
+  )
   async retakeAssessment(
     @Req() req: IRequestWithUser,
     @Headers('accept-language') acceptLanguage: LanguageCode,

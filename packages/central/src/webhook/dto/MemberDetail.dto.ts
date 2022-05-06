@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class MemberDetailDto {
   @IsString()
@@ -7,12 +13,12 @@ export class MemberDetailDto {
   @ApiProperty()
   SkuCode: string;
 
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
   @ApiProperty()
   StartPackage: string;
 
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
   @ApiProperty()
   EndPackage: string;

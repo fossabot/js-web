@@ -44,6 +44,12 @@ yarn
 yarn core db:migration:run
 ```
 
+- Also, run migration script to create db schema for dynamodb
+
+```
+yarn core create:dynamodb:table
+```
+
 Then start the core package (this has to be started before other packages):
 
 ```

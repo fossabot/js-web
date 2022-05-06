@@ -79,12 +79,28 @@ services:
     networks:
       - admin-socket
 
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:1.18.0"
+    container_name: dynamodb-local
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - "dynamodbdata:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    user: root
+    networks:
+      - dynamodb
+
 networks:
   postgres:
     driver: bridge
   elastic:
     driver: bridge
   redis:
+    driver: bridge
+  dynamodb:
     driver: bridge
   admin-socket:
     driver: bridge
@@ -93,3 +109,4 @@ volumes:
   data01:
     driver: local
   cache:
+  dynamodbdata:

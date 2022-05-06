@@ -206,6 +206,8 @@ describe('WebhookController (e2e)', () => {
 
   it('as a CRM user, I should be able to assign a new subscription with my subscription plan to existing user', async () => {
     const user = await app.get(EntityManager).getRepository(User).save({
+      firstName: 'john',
+      lastName: 'doe',
       email: 'john.doe@yopmail.com',
       seacId: 'seac1',
     });
@@ -237,6 +239,8 @@ describe('WebhookController (e2e)', () => {
 
   it('as a CRM user, I should be able to extend subscription period to existing user', async () => {
     const user = await app.get(EntityManager).getRepository(User).save({
+      firstName: 'john',
+      lastName: 'doe',
       email: 'john.doe@yopmail.com',
       seacId: 'seac1',
     });

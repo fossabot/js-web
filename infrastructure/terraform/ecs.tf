@@ -409,7 +409,7 @@ resource "aws_ecs_task_definition" "web_definition" {
           "value" : "${var.application_base_url}/api/central"
         },
         {
-          "name": "NEXT_PUBLIC_NOTIFICATION_API_BASE_URL",
+          "name" : "NEXT_PUBLIC_NOTIFICATION_API_BASE_URL",
           "value" : "${var.application_base_url}/api/notification"
         }
       ]
@@ -597,20 +597,24 @@ resource "aws_ecs_task_definition" "auth_api_definition" {
         "value" : var.crm_retail_sig
       },
       {
-        "name": "RECAPTCHA_SECRET_KEY",
-        "value": var.recaptcha_secret_key
+        "name" : "RECAPTCHA_SECRET_KEY",
+        "value" : var.recaptcha_secret_key
       },
       {
-        "name": "RECAPTCHA_MIN_SCORE",
-        "value": tostring(var.recaptcha_min_score)
+        "name" : "RECAPTCHA_MIN_SCORE",
+        "value" : tostring(var.recaptcha_min_score)
       },
       {
-        "name": "REDIS_HOST",
-        "value": var.redis_host
+        "name" : "REDIS_HOST",
+        "value" : var.redis_host
       },
       {
-        "name": "REDIS_PORT",
-        "value": var.redis_port
+        "name" : "REDIS_PORT",
+        "value" : var.redis_port
+      },
+      {
+        "name" : "DYNAMODB_MAIN_TABLE_NAME",
+        "value" : var.aws_dynamodb_main_table_name
       }
     ]
     portMappings = [{
@@ -850,12 +854,16 @@ resource "aws_ecs_task_definition" "central_api_definition" {
         "value" : var.assessment_center_token
       },
       {
-        "name": "REDIS_HOST",
-        "value": var.redis_host
+        "name" : "REDIS_HOST",
+        "value" : var.redis_host
       },
       {
-        "name": "REDIS_PORT",
-        "value": var.redis_port
+        "name" : "REDIS_PORT",
+        "value" : var.redis_port
+      },
+      {
+        "name" : "DYNAMODB_MAIN_TABLE_NAME",
+        "value" : var.aws_dynamodb_main_table_name
       }
     ]
     portMappings = [{
@@ -1045,12 +1053,16 @@ resource "aws_ecs_task_definition" "payment_api_definition" {
         "value" : var.ar_password
       },
       {
-        "name": "REDIS_HOST",
-        "value": var.redis_host
+        "name" : "REDIS_HOST",
+        "value" : var.redis_host
       },
       {
-        "name": "REDIS_PORT",
-        "value": var.redis_port
+        "name" : "REDIS_PORT",
+        "value" : var.redis_port
+      },
+      {
+        "name" : "DYNAMODB_MAIN_TABLE_NAME",
+        "value" : var.aws_dynamodb_main_table_name
       }
     ]
     portMappings = [{
@@ -1511,9 +1523,61 @@ resource "aws_iam_policy" "s3_policy" {
   })
 }
 
+resource "aws_iam_policy" "dynamodb_policy" {
+  name = "${var.app_group}-${var.environment_name}-dynamodb-policy"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "DynamoDBIndexAndStreamAccess",
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:GetShardIterator",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:DescribeStream",
+          "dynamodb:GetRecords",
+          "dynamodb:ListStreams"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "DynamoDBTableAccess",
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:ConditionCheckItem",
+          "dynamodb:PutItem",
+          "dynamodb:DescribeTable",
+          "dynamodb:DeleteItem",
+          "dynamodb:GetItem",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "DynamoDBDescribeLimitsAccess",
+        "Effect" : "Allow",
+        "Action" : "dynamodb:DescribeLimits",
+        "Resource" : "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "ecs_task_role" {
-  name                = "${var.app_group}-${var.environment_name}-task-role"
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly", "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore", aws_iam_policy.ses_policy.arn, aws_iam_policy.s3_policy.arn]
+  name = "${var.app_group}-${var.environment_name}-task-role"
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+    aws_iam_policy.ses_policy.arn,
+    aws_iam_policy.s3_policy.arn,
+    aws_iam_policy.dynamodb_policy.arn
+  ]
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [

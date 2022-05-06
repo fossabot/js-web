@@ -15,6 +15,7 @@ import { RawProductEntityModule } from '@seaccentral/core/dist/raw-product/rawPr
 import { ExternalProviderModule } from '@seaccentral/core/dist/external-package-provider/external.provider.module';
 
 import { CoreAddressModule } from '@seaccentral/core/dist/address/coreAddress.module';
+import { PendingMember } from '@seaccentral/core/dist/user/PendingMember.entity';
 import { MemberService } from './member.service';
 import { WebhookController } from './webhook.controller';
 import { RawProductService } from './RawProduct.service';
@@ -41,6 +42,7 @@ import { GroupModule } from '../group/group.module';
       SubscriptionPlan,
       Subscription,
       Organization,
+      PendingMember,
     ]),
   ],
   controllers: [WebhookController],

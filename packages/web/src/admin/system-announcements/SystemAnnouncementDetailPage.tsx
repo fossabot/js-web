@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AccessControl } from '../../app-state/accessControl';
 import API_PATHS from '../../constants/apiPaths';
 import { BACKEND_ADMIN_CONTROL } from '../../constants/policies';
+import WEB_PATHS from '../../constants/webPaths';
 import { notificationHttp } from '../../http';
 import useTranslation from '../../i18n/useTranslation';
 import { AdminLayout } from '../../layouts/admin.layout';
@@ -54,7 +55,7 @@ export const SystemAnnouncementDetailPage = () => {
           <a
             role="button"
             onClick={() => {
-              router.back();
+              router.push(WEB_PATHS.SYSTEM_ANNOUNCEMENT);
             }}
             className="flex items-center space-x-2 text-caption text-gray-650"
           >

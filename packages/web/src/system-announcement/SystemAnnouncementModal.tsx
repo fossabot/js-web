@@ -1,3 +1,4 @@
+import cx from 'classnames';
 import { format } from 'date-fns';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
@@ -7,6 +8,7 @@ import useTranslation from '../i18n/useTranslation';
 import { Language, LanguageCode } from '../models/language';
 import { ISystemAnnouncement } from '../models/systemAnnouncement';
 import Button from '../ui-kit/Button';
+import ContentLineClampStyle from '../ui-kit/ContentLineClamp/contentLineClamp.module.css';
 import { Modal } from '../ui-kit/HeadlessModal';
 
 type ModalSystemAnnouncement = Pick<
@@ -106,7 +108,10 @@ export const SystemAnnouncementModal = ({
             )}
           {announcement.message && (
             <div
-              className="mb-8 text-caption text-gray-650"
+              className={cx(
+                'mb-8 text-caption text-gray-650',
+                ContentLineClampStyle.rte,
+              )}
               dangerouslySetInnerHTML={{
                 __html: localeText(announcement.message),
               }}

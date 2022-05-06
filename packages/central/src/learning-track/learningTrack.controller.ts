@@ -35,7 +35,12 @@ import { PolicyGuard } from '@seaccentral/core/dist/access-control/policy.guard'
 import { BACKEND_ADMIN_CONTROL } from '@seaccentral/core/dist/access-control/constants';
 import { LearningTrack } from '@seaccentral/core/dist/learning-track/LearningTrack.entity';
 
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import { NotificationProducer } from '@seaccentral/core/dist/queue/notification.producer';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
 import { PushNotificationSubCategoryKey } from '@seaccentral/core/dist/notification/enum/PushNotificationSubCategory.enum';
 import { NotificationVariableDict as NV } from '@seaccentral/core/dist/notification/NotificationVariableDict';
 
@@ -232,7 +237,13 @@ export class LearningTrackController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.LEARNING_TRACK,
+      subCategory: userLogSubCategory.ENROLL,
+    }),
+  )
   @Post(':id/enroll')
   async enroll(
     @Param('id') learningTrackId: string,

@@ -1,8 +1,11 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationProducer } from './notification.producer';
+import { EmailNotificationFilterService } from './emailNotificationFilter.service';
 import { QueueMetadata } from './queueMetadata';
+import { UserAuthProvider } from '../user/UserAuthProvider.entity';
 
 @Module({
   imports: [
@@ -28,8 +31,9 @@ import { QueueMetadata } from './queueMetadata';
     BullModule.registerQueue({
       name: QueueMetadata.notification.queueName,
     }),
+    TypeOrmModule.forFeature([UserAuthProvider]),
   ],
-  providers: [NotificationProducer],
+  providers: [NotificationProducer, EmailNotificationFilterService],
   exports: [BullModule, NotificationProducer],
 })
 export class QueueModule {}

@@ -7,6 +7,9 @@
     "ts:watch": "tsc -w",
     "ts:build": "tsc -p .",
     "lint:fix": "eslint '**/*.{js,ts,tsx,json}' --quiet --fix",
+    "create:dynamodb:table": "ts-node -r dotenv/config -r tsconfig-paths/register ./src/user-log/createDynamoDbTable.ts",
+    "delete:dynamodb:table": "ts-node -r dotenv/config -r tsconfig-paths/register ./src/user-log/deleteDynamoDbTable.ts",
+    "copy:templates": "mkdir -p dist/email-template && cp -rv src/email-template/* dist/email-template/",
     "precommit": "lint-staged",
     "lint": "eslint '**/*.{js,ts,tsx,json}'",
     "test": "jest --setupFiles dotenv/config --passWithNoTests --runInBand",
@@ -58,6 +61,8 @@
   },
   "dependencies": {
     "@authenio/samlify-xsd-schema-validator": "^1.0.3",
+    "@aws-sdk/client-dynamodb": "^3.53.0",
+    "@aws-sdk/lib-dynamodb": "^3.53.0",
     "@elastic/elasticsearch": "^7.16.0",
     "@nestjs/bull": "^0.5.4",
     "@nestjs/common": "^7.6.13",

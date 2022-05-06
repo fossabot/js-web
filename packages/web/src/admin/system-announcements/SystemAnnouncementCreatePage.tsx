@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { AccessControl } from '../../app-state/accessControl';
 import { BACKEND_ADMIN_CONTROL } from '../../constants/policies';
+import WEB_PATHS from '../../constants/webPaths';
 import useTranslation from '../../i18n/useTranslation';
 import { AdminLayout } from '../../layouts/admin.layout';
 import { ChevronLeft } from '../../ui-kit/icons';
@@ -28,7 +29,7 @@ export const SystemAnnouncementCreatePage = () => {
           <a
             role="button"
             onClick={() => {
-              router.back();
+              router.push(WEB_PATHS.SYSTEM_ANNOUNCEMENT);
             }}
             className="flex items-center space-x-2 text-caption text-gray-650"
           >

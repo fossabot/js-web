@@ -99,17 +99,6 @@ function SessionParticipantsList({
     },
   ];
 
-  const getActionOptions = () => {
-    if (session.sessionStatus === CourseSessionStatus.NOT_STARTED) {
-      //only return cancel participant action when session is not started, don't allow mark/attendance on this case
-      const tempActions = actionOptions.filter(
-        (item) => item.value === CourseSessionBookingStatus.CANCELLED,
-      );
-      return tempActions;
-    }
-    return actionOptions;
-  };
-
   return (
     <div className="w-full">
       <DataTable>
@@ -162,7 +151,7 @@ function SessionParticipantsList({
               <DataTableColumn optional={true}>{it.email}</DataTableColumn>
               <DataTableColumn>
                 <DataTableSelect
-                  options={getActionOptions()}
+                  options={actionOptions}
                   value={
                     actionOptions.find((a) => a.value === it.bookingStatus) ||
                     actionOptions[0]

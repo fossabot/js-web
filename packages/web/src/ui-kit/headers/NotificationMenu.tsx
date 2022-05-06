@@ -64,6 +64,7 @@ export const NotificationMenu = ({
         <NotificationList
           userNotifications={userNotifications}
           markRead={markRead}
+          capHeight
         />
         {userNotifications.length > 0 && (
           <div className="px-4 py-3 text-caption font-regular">

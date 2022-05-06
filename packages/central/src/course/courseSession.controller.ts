@@ -31,8 +31,9 @@ import {
 } from '@seaccentral/core/dist/access-control/policy.guard';
 import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
 import { CourseSession } from '@seaccentral/core/dist/course/CourseSession.entity';
-import { CourseSessionUploadHistory } from '@seaccentral/core/dist/course/CourseSessionUploadHistory.entity';
 import { Reason } from '@seaccentral/core/dist/course/UserCourseSessionCancellationLog.entity';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+import { CourseSessionUploadHistory } from '@seaccentral/core/dist/course/CourseSessionUploadHistory.entity';
 import { BaseQueryDto } from '@seaccentral/core/dist/dto/BaseQuery.dto';
 import {
   BaseResponseDto,
@@ -41,17 +42,17 @@ import {
   getSearchRequestParams,
   getSortRequestParams,
 } from '@seaccentral/core/dist/dto/BaseResponse.dto';
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import { LanguageCode } from '@seaccentral/core/dist/language/Language.entity';
 import { NotificationProducer } from '@seaccentral/core/dist/queue/notification.producer';
 import { Response as ExpressResponse } from 'express';
 import { Connection } from 'typeorm';
 
 import { PushNotificationSubCategoryKey } from '@seaccentral/core/dist/notification/enum/PushNotificationSubCategory.enum';
-import { formatWithTimezone } from '@seaccentral/core/dist/utils/date';
-import {
-  BANGKOK_TIMEZONE,
-  NOTIFICATION_DATE_FORMAT,
-} from '@seaccentral/core/dist/utils/constants';
+import { NOTIFICATION_DATE_FORMAT } from '@seaccentral/core/dist/utils/constants';
 import { NotificationVariableDict as NV } from '@seaccentral/core/dist/notification/NotificationVariableDict';
 
 import { getLanguageFromDate } from '@seaccentral/core/dist/utils/language';
@@ -60,7 +61,6 @@ import { CourseSessionMe } from './dto/CourseSessionMe.dto';
 import { CourseSessionService } from './courseSession.service';
 import { CourseSessionQueryDto } from './dto/CourseSessionQuery.dto';
 import IRequestWithUser from '../invitation/interface/IRequestWithUser';
-import { SubscriptionService } from '../subscription/subscription.service';
 
 import { CourseSessionCancellationService } from './courseSessionCancellation.service';
 import { CourseSessionReportService } from './courseSessionReport.service';
@@ -97,13 +97,17 @@ export class CourseSessionController {
     private readonly courseSessionService: CourseSessionService,
     private readonly userCourseProgressService: UserCourseProgressService,
     private readonly courseCancellationService: CourseSessionCancellationService,
-    private readonly subscriptionService: SubscriptionService,
     private readonly courseSessionReportService: CourseSessionReportService,
     private readonly notificationProducer: NotificationProducer,
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE_SESSION,
+    }),
+  )
   @Get('/')
   async getCourseSessions(
     @Query() dto: CourseSessionQueryDto,
@@ -131,6 +135,7 @@ export class CourseSessionController {
   ) {
     const response = new BaseResponseDto<{
       active: CourseSessionMe[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cancelled: any[];
     }>();
     const courseSessions = await this.courseSessionService.findCourseSessions(
@@ -186,7 +191,12 @@ export class CourseSessionController {
 
   // TODO: Cache with Redis
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE_SESSION,
+    }),
+  )
   @UsePipes(new ValidationPipe({ transform: true }))
   @Get('/calendar')
   async getCourseSessionCalendar(
@@ -273,7 +283,13 @@ export class CourseSessionController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE_SESSION,
+      subCategory: userLogSubCategory.BOOK,
+    }),
+  )
   @Post('/:id/booking')
   async bookingCourseSession(
     @Param('id', CourseSessionValidatePipe) courseSessionId: string,
@@ -329,7 +345,13 @@ export class CourseSessionController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE_SESSION,
+      subCategory: userLogSubCategory.CANCEL_BOOKING,
+    }),
+  )
   @Delete('/:id/booking')
   async deleteCourseSessionBooking(
     @Param('id', CourseSessionValidatePipe) courseSessionId: string,
@@ -448,7 +470,13 @@ export class CourseSessionController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(
+    ClassSerializerInterceptor,
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE_SESSION,
+      subCategory: userLogSubCategory.VALIDATE_BOOKING,
+    }),
+  )
   @Post(':id/validate-booking-request')
   async validateBookingRequest(
     @Param('id', CourseSessionValidatePipe) courseSessionId: string,

@@ -195,7 +195,7 @@ export const SystemAnnouncementForm = ({
         <div className="mt-4 mb-8 h-px w-full bg-gray-200"></div>
         <ReactQuillWithLang
           labelEn={`${t('systemAnnouncementForm.messageLabel')} (EN)`}
-          labelTh={`${t('systemAnnouncementForm.messageLabel')} (EN)`}
+          labelTh={`${t('systemAnnouncementForm.messageLabel')} (TH)`}
           name="message"
           value={formik.values.message}
           formik={formik}

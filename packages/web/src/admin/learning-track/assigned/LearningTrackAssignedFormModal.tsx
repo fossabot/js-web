@@ -159,8 +159,7 @@ export const LearningTrackAssignedFormModal = ({
     >
       <Dialog.Title as="div" className="flex justify-between">
         <span className="text-subheading font-semibold text-black">
-          {data?.type === 'add' ? 'Add' : 'Edit'} Required / Assigned Learning
-          Track
+          {data?.type === 'add' ? 'Add' : 'Edit'} Assigned Learning Track
         </span>
       </Dialog.Title>
 

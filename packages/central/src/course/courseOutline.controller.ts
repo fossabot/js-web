@@ -15,29 +15,36 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { Connection } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
-import { BACKEND_ADMIN_CONTROL } from '@seaccentral/core/dist/access-control/constants';
+
+import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
 import { Policy } from '@seaccentral/core/dist/access-control/policy.decorator';
 import { PolicyGuard } from '@seaccentral/core/dist/access-control/policy.guard';
-import JwtAuthGuard from '@seaccentral/core/dist/auth/jwtAuth.guard';
+import { BACKEND_ADMIN_CONTROL } from '@seaccentral/core/dist/access-control/constants';
 import {
   BaseResponseDto,
   getPaginationResponseParams,
 } from '@seaccentral/core/dist/dto/BaseResponse.dto';
 import { ERROR_CODES } from '@seaccentral/core/dist/error/errors';
 import { LanguageCode } from '@seaccentral/core/dist/language/Language.entity';
+import {
+  userLogCategory,
+  userLogSubCategory,
+} from '@seaccentral/core/dist/user-log/constants';
 import { NotificationProducer } from '@seaccentral/core/dist/queue/notification.producer';
-import { Connection } from 'typeorm';
-import IRequestWithUser from '../invitation/interface/IRequestWithUser';
+import { UserLogInterceptor } from '@seaccentral/core/dist/user-log/userLogInterceptor.interceptor';
+
 import { CourseService } from './course.service';
 import { CourseOutlineService } from './courseOutline.service';
-import { CourseSubscriptionPlanActivator } from './CourseSubscriptionPlan.activator';
-import { CourseOutlineQueryDto } from './dto/CourseOutlineQuery.dto';
-import { CourseOutlineResponse } from './dto/CourseOutlineResponse.dto';
-import { TranslatedCourseOutlineResponseDto } from './dto/CourseResponse.dto';
-import { UserScormProgressDto } from './dto/UserScormProgress.dto';
 import { UserVideoProgressDto } from './dto/UserVideoProgress.dto';
+import { UserScormProgressDto } from './dto/UserScormProgress.dto';
+import { CourseOutlineQueryDto } from './dto/CourseOutlineQuery.dto';
+import IRequestWithUser from '../invitation/interface/IRequestWithUser';
+import { CourseOutlineResponse } from './dto/CourseOutlineResponse.dto';
 import { UserCourseProgressService } from './userCourseProgress.service';
+import { TranslatedCourseOutlineResponseDto } from './dto/CourseResponse.dto';
+import { CourseSubscriptionPlanActivator } from './CourseSubscriptionPlan.activator';
 
 @Controller('v1/course-outlines')
 @ApiTags('CourseOutline')
@@ -74,6 +81,12 @@ export class CourseOutlineController {
   }
 
   @UseGuards(JwtAuthGuard, CourseSubscriptionPlanActivator)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.PROGRESS_COURSE,
+    }),
+  )
   @UsePipes(new ValidationPipe({ transform: true }))
   @Put(':outlineId/progress-scorm')
   async updateProgress(
@@ -118,6 +131,12 @@ export class CourseOutlineController {
   }
 
   @UseGuards(JwtAuthGuard, CourseSubscriptionPlanActivator)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.PROGRESS_COURSE,
+    }),
+  )
   @UsePipes(new ValidationPipe({ transform: true }))
   @Put(':id/progress-video')
   async updateVideoProgress(
@@ -139,6 +158,12 @@ export class CourseOutlineController {
   }
 
   @UseGuards(JwtAuthGuard, CourseSubscriptionPlanActivator)
+  @UseInterceptors(
+    new UserLogInterceptor({
+      category: userLogCategory.COURSE,
+      subCategory: userLogSubCategory.VALIDATE_SUBSCRIPTION_PLAN,
+    }),
+  )
   @Post(':outlineId/validate')
   async validateSubscriptionPlan(
     @Param('outlineId') outlineId: string,
