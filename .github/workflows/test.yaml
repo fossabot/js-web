@@ -57,10 +57,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres:13
-        credentials:
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY}}
+        image: postgres:13
         ports:
           - 5432:5432
         env:
@@ -111,10 +108,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres:13
-        credentials:
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY}}
+        image: postgres:13
         ports:
           - 5432:5432
         env:
@@ -162,10 +156,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres:13
-        credentials:
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY}}
+        image: postgres:13
         ports:
           - 5432:5432
         env:
@@ -213,10 +204,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres:13
-        credentials:
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY}}
+        image: postgres:13
         ports:
           - 5432:5432
         env:
@@ -264,10 +252,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres:13
-        credentials:
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY}}
+        image: postgres:13
         ports:
           - 5432:5432
         env:
@@ -336,10 +321,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres:13
-        credentials:
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY}}
+        image: postgres:13
         ports:
           - 5432:5432
         env:
