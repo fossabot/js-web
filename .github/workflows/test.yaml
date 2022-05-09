@@ -55,7 +55,7 @@ jobs:
     runs-on: oozou-eks-web
     services:
       postgres:
-        image: postgres:13
+        image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
         ports:
           - 5432:5432
         env:
@@ -106,7 +106,7 @@ jobs:
     runs-on: oozou-eks-web
     services:
       postgres:
-        image: postgres:13
+        image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
         ports:
           - 5432:5432
         env:
@@ -154,7 +154,7 @@ jobs:
     runs-on: oozou-eks-web
     services:
       postgres:
-        image: postgres:13
+        image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
         ports:
           - 5432:5432
         env:
@@ -202,7 +202,7 @@ jobs:
     runs-on: oozou-eks-web
     services:
       postgres:
-        image: postgres:13
+        image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
         ports:
           - 5432:5432
         env:
@@ -250,7 +250,7 @@ jobs:
     runs-on: oozou-eks-web
     services:
       postgres:
-        image: postgres:13
+        image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
         ports:
           - 5432:5432
         env:
@@ -319,7 +319,7 @@ jobs:
     runs-on: oozou-eks-web
     services:
       postgres:
-        image: postgres:13
+        image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
         ports:
           - 5432:5432
         env:
