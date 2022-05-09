@@ -55,7 +55,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres
+        image: gcr.io/vital-axiom-349514/postgres:13
         credentials:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY}}
@@ -109,7 +109,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres
+        image: gcr.io/vital-axiom-349514/postgres:13
         credentials:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY}}
@@ -160,7 +160,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres
+        image: gcr.io/vital-axiom-349514/postgres:13
         credentials:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY}}
@@ -211,7 +211,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres
+        image: gcr.io/vital-axiom-349514/postgres:13
         credentials:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY}}
@@ -262,7 +262,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres
+        image: gcr.io/vital-axiom-349514/postgres:13
         credentials:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY}}
@@ -334,7 +334,7 @@ jobs:
     runs-on: org-web-runner
     services:
       postgres:
-        image: gcr.io/vital-axiom-349514/postgres
+        image: gcr.io/vital-axiom-349514/postgres:13
         credentials:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY}}
