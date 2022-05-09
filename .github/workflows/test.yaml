@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
 
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -52,7 +52,7 @@ jobs:
         run: yarn workspace @seaccentral/web lint:fix    
         
   test-migration:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     services:
       postgres:
         image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
@@ -103,7 +103,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-core:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     services:
       postgres:
         image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
@@ -151,7 +151,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-auth:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     services:
       postgres:
         image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
@@ -199,7 +199,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-central:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     services:
       postgres:
         image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
@@ -247,7 +247,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-payment:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     services:
       postgres:
         image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
@@ -295,7 +295,7 @@ jobs:
           DB_PORT: ${{ env.DATABASE_PORT }}
 
   test-web:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -316,7 +316,7 @@ jobs:
         uses: ./.github/actions/test-web
 
   test-notification:
-    runs-on: oozou-eks-web
+    runs-on: org-web-runner
     services:
       postgres:
         image: asia-southeast1-docker.pkg.dev/vital-axiom-349514/vital-axiom-349514/postgres:13
