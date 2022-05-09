@@ -56,9 +56,9 @@ jobs:
     services:
       postgres:
         image: gcr.io/vital-axiom-349514/postgres
-		credentials:
-        username: _json_key
-        password: ${{ secrets.GCR_JSON_KEY}}
+        credentials:
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY}}
         ports:
           - 5432:5432
         env:
@@ -110,9 +110,9 @@ jobs:
     services:
       postgres:
         image: gcr.io/vital-axiom-349514/postgres
-		credentials:
-        username: _json_key
-        password: ${{ secrets.GCR_JSON_KEY}}
+        credentials:
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY}}
         ports:
           - 5432:5432
         env:
@@ -161,9 +161,9 @@ jobs:
     services:
       postgres:
         image: gcr.io/vital-axiom-349514/postgres
-		credentials:
-        username: _json_key
-        password: ${{ secrets.GCR_JSON_KEY}}
+        credentials:
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY}}
         ports:
           - 5432:5432
         env:
@@ -212,9 +212,9 @@ jobs:
     services:
       postgres:
         image: gcr.io/vital-axiom-349514/postgres
-		credentials:
-        username: _json_key
-        password: ${{ secrets.GCR_JSON_KEY}}
+        credentials:
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY}}
         ports:
           - 5432:5432
         env:
@@ -263,9 +263,9 @@ jobs:
     services:
       postgres:
         image: gcr.io/vital-axiom-349514/postgres
-		credentials:
-        username: _json_key
-        password: ${{ secrets.GCR_JSON_KEY}}
+        credentials:
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY}}
         ports:
           - 5432:5432
         env:
@@ -335,9 +335,9 @@ jobs:
     services:
       postgres:
         image: gcr.io/vital-axiom-349514/postgres
-		credentials:
-        username: _json_key
-        password: ${{ secrets.GCR_JSON_KEY}}
+        credentials:
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY}}
         ports:
           - 5432:5432
         env:
