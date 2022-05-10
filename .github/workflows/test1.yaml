@@ -1,0 +1,172 @@
+name: Tes1
+
+on:
+  workflow_dispatch:  
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '*/5 * * * *'
+
+env:
+  DATABASE_PORT: 5432
+  POSTGRES_DB: seac_development_test
+  POSTGRES_USERNAME: seac_central
+  POSTGRES_PASSWORD: seac_central
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+  
+jobs:
+        
+  test1:
+    runs-on: org-web-runner
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-migration
+          POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+  test2:
+    runs-on: org-web-runner
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-core
+          POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+  test3:
+    runs-on: org-web-runner
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-auth
+          POSTGRES_USER: ${{ env.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+  test4:
+    runs-on: org-web-runner
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-central
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+
+  test5:
+    runs-on: org-web-runner
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-payment
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
+
+  test6:
+    runs-on: org-web-runner
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}-test-notification
+          POSTGRES_USER: seac_central
+          POSTGRES_PASSWORD: seac_central
+          TZ: UTC
+          PGTZ: UTC
+        options: --restart=unless-stopped
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
+          redis-port: 12345
+
