@@ -2,9 +2,6 @@ name: Test and Build on on Develop
 
 on:
   workflow_dispatch:  
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    - cron:  '*/10 * * * *'
 
 env:
   DATABASE_PORT: 5432
