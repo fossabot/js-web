@@ -1,0 +1,25 @@
+name: self-runner-deploy-test
+
+on:
+  workflow_dispatch:  
+
+jobs:
+
+
+  deploy:
+    needs: test
+    runs-on: oozou-eks-runner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Setup node.js (14)
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+
+      - name: Build core
+        id: build-core
+        run: |
+          echo "Dockerizing Core Package..."
+          docker buildx build --platform linux/amd64 -f "packages/core/Dockerfile" -t test:cache-prod .
