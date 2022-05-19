@@ -59,3 +59,9 @@ jobs:
           DB_USERNAME: ${{ env.POSTGRES_USERNAME }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           DB_PORT: ${{ env.DATABASE_PORT }}
+      - name: unit test
+        run: npm i -D jest-sonar-reporter
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}        
