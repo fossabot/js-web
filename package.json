@@ -39,6 +39,7 @@
     "payment": "yarn workspace @seaccentral/payment",
     "cli": "yarn workspace @seaccentral/cli",
     "web": "yarn workspace @seaccentral/web",
+    "testResultsProcessor": "jest-sonar-reporter",
     "notification": "yarn workspace @seaccentral/notification"
   },
   "engines": {
