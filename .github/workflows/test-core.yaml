@@ -11,7 +11,7 @@ env:
   
 jobs:  
   test-core:
-    runs-on: oozou-eks-web
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
