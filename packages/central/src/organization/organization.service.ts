@@ -377,7 +377,7 @@ export class OrganizationService extends TransactionFor<OrganizationService> {
         serviceProviderConfig.metadataFileName;
 
       await this.serviceProviderConfigRepository.save(serviceProviderConfig);
-    }
+    } 
   }
 
   async setupSSOLoginForOrganizationUsers(organization: Organization) {
