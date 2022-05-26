@@ -6,7 +6,6 @@
   template-extensions:
   - .new
   - .hbs
-  - ''
 
   ignore-filenames:
   - skip.js
