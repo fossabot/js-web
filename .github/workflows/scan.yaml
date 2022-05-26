@@ -5,19 +5,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  njsscan:
-    runs-on: ubuntu-latest
-    name: njsscan check
-    steps:
-    - name: Checkout the code
-      uses: actions/checkout@v2
-    - name: nodejsscan scan
-      id: njsscan
-      uses: ajinabraham/njsscan-action@master
-      with:
-        args: '. --sonarqube  --output results.sonar || true'
-
-    - name: Archive code coverage results
-      uses: actions/upload-artifact@v3
-      with:
-        path: results.sonar
+  scan:
+    uses: poc-lycbrina/.github/.github/workflows/code-scan.yml@main
+    secrets: inherit
+    with:
+        SCAN_TYPE: JavaScript
+        SCAN_INCLUDE: .
