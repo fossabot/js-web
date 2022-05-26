@@ -238,6 +238,6 @@ export class AuthService extends TransactionFor<AuthService> {
           })
           .catch();
       }
-     }
+     }   
   }
 }
