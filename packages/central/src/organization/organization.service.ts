@@ -343,7 +343,7 @@ export class OrganizationService extends TransactionFor<OrganizationService> {
       await this.setupSSOLoginForOrganizationUsers(organization);
 
       return;
-    }
+    } 
 
     if (isSP) {
       let serviceProviderConfig =
