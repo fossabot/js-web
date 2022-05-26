@@ -218,7 +218,7 @@ export class UserAssignedCourseService {
           'User Assigned Course has existing mapping for this user and course.',
         );
       }
-    }
+    } 
 
     userAssignedCourse.courseId = dto.courseId;
     userAssignedCourse.assignmentType = dto.assignmentType;
