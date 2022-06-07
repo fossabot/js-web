@@ -1,4 +1,5 @@
 # SEAC Central [![Build](https://github.com/oozou/seac-central/actions/workflows/ci.yml/badge.svg)](https://github.com/oozou/seac-central/actions/workflows/ci.yml)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpoc-lycbrina%2Fjs-web.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpoc-lycbrina%2Fjs-web?ref=badge_shield)
 
 This is the monorepo which contains all the packages and applications used for the SEAC Central Platform
 
@@ -170,3 +171,7 @@ resource "aws_ecs_task_definition" "auth_api_definition" {
 # Authors
 
 TODO: Add the Authors
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpoc-lycbrina%2Fjs-web.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpoc-lycbrina%2Fjs-web?ref=badge_large)
